@@ -1,0 +1,52 @@
+---
+/**
+ * Planche atlas miniature d'une édition : terre/mer réelles (Natural Earth),
+ * trace carmin, échelle graphique et nord. Données : src/data/minimaps/<slug>.json
+ * (générées par scripts/gen-minimaps.mjs).
+ */
+interface Props {
+  slug: string;
+  label?: string;
+  class?: string;
+}
+const { slug, label = "", class: className = "" } = Astro.props;
+
+const maps = import.meta.glob("../data/minimaps/*.json", { eager: true });
+const m = maps[`../data/minimaps/${slug}.json`]?.default;
+---
+
+{m && (
+  <div class={`relative overflow-hidden border border-navy/30 ${className}`}>
+    <svg viewBox="0 0 100 100" class="block w-full" aria-hidden="true">
+      <rect width="100" height="100" class="fill-navy/10" />
+      {m.land.map((d) => <path d={d} class="fill-paper stroke-none" />)}
+      {m.coast.map((d) => <path d={d} fill="none" class="stroke-navy/40" stroke-width="0.7" />)}
+      <g fill="none" class="stroke-navy/10" stroke-width="0.4">
+        <path d="M25 0 V100 M50 0 V100 M75 0 V100 M0 25 H100 M0 50 H100 M0 75 H100" />
+      </g>
+      {m.trace.map((d) => (
+        <path d={d} fill="none" stroke="var(--color-paper)" stroke-width="2.6"
+          stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
+      ))}
+      {m.trace.map((d) => (
+        <path d={d} fill="none" stroke="var(--color-carmin)" stroke-width="1.4"
+          stroke-linecap="round" stroke-linejoin="round" />
+      ))}
+      <circle cx={m.start[0]} cy={m.start[1]} r="2" fill="var(--color-carmin)" />
+      <circle cx={m.end[0]} cy={m.end[1]} r="2" fill="var(--color-paper)"
+        stroke="var(--color-carmin)" stroke-width="1.2" />
+      <g class="stroke-navy" stroke-width="0.8">
+        <path d={`M4 93 h${m.scaleUnits}`} />
+        <path d="M4 91.5 v3" />
+        <path d={`M${4 + m.scaleUnits} 91.5 v3`} />
+      </g>
+      <text x={4 + m.scaleUnits / 2} y="90" text-anchor="middle"
+        class="fill-navy font-mono" font-size="4.5">{m.scaleKm} km</text>
+      <text x="94" y="9" text-anchor="middle" class="fill-navy/70 font-mono" font-size="5">N</text>
+      <path d="M94 11 l0 5 M92.5 13 L94 11 l1.5 2" fill="none" class="stroke-navy/70" stroke-width="0.7" />
+    </svg>
+    {label && (
+      <span class="font-mono absolute bottom-1.5 right-2 text-[9px] uppercase tracking-[0.15em] text-navy/70">{label}</span>
+    )}
+  </div>
+)}

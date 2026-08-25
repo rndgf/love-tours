@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  /* Carnet d'été : papier, encre chaude, serif éditorial */
+  --color-paper: #faf6ee;
+  --color-paper-deep: #f0e9d8;
+  --color-ink: #23201a;
+  --color-ink-soft: #7a7160;
+  /* Atlas : encre marine des cadres, carmin des traces */
+  --color-navy: #1e2f4d;
+  --color-carmin: #b3402f;
+  --color-love: #b3402f;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+  --font-body: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-carmin) 25%, transparent);
+}
+
+/* Quadrillage atlas : fond des vignettes de trace et des bandeaux */
+.atlas-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--color-navy) 12%, transparent) 0.5px, transparent 0.5px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-navy) 12%, transparent) 0.5px, transparent 0.5px);
+  background-size: 28px 28px;
+}

@@ -1,0 +1,71 @@
+---
+import "../styles/global.css";
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/inter";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import { tours } from "../lib/tours.js";
+import BackgroundMap from "../components/BackgroundMap.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = "Nos étés à deux, à vélo ou à pied, depuis 2021." } = Astro.props;
+const firstYear = tours.length ? Math.min(...tours.map((t) => t.year)) : new Date().getFullYear();
+const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href={`data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="none" stroke="#1e2f4d" stroke-width="2.4"/><path d="M18 25 C12 20.2 10.3 16.4 13.3 13.7 C15.4 11.9 17.6 13.4 18 15.1 C18.4 13.4 20.6 11.9 22.7 13.7 C25.7 16.4 24 20.2 18 25 Z" fill="#b3402f"/></svg>')}`} />
+  </head>
+  <body class="min-h-screen antialiased">
+    <!-- Fond cartographique réel : côtes de la Manche, Seine et Loire, traces des
+         Love Tours — centré sur la maison (Sotteville-lès-Rouen). -->
+    <div class="pointer-events-none fixed inset-0 -z-10" aria-hidden="true">
+      <BackgroundMap />
+    </div>
+    <header class="border-b-2 border-navy">
+      <nav class="mx-auto flex max-w-6xl items-baseline justify-between px-4 py-4 sm:px-6 sm:py-5">
+        <a href="/" class="flex items-center gap-2.5">
+          <!-- Picto : roue de vélo + cœur, sentier pointillé (rando) -->
+          <svg viewBox="0 0 36 36" class="h-9 w-9 shrink-0" aria-hidden="true">
+            <circle cx="18" cy="16" r="12.5" fill="none" class="stroke-navy" stroke-width="1.8" />
+            <path d="M9.5 8.5 L12 11 M26.5 8.5 L24 11 M9.5 23.5 L12 21 M26.5 23.5 L24 21"
+              class="stroke-navy" stroke-width="1.2" stroke-linecap="round" />
+            <path d="M18 22.5 C12.5 18 10.8 14.4 13.6 11.9 C15.6 10.2 17.6 11.6 18 13.2 C18.4 11.6 20.4 10.2 22.4 11.9 C25.2 14.4 23.5 18 18 22.5 Z"
+              fill="var(--color-carmin)" />
+            <path d="M3 32.5 Q10 29.5 18 31.5 T33 30.5" fill="none"
+              class="stroke-navy/60" stroke-width="1.6" stroke-dasharray="2.5 3" stroke-linecap="round" />
+          </svg>
+          <span class="font-display text-2xl font-semibold tracking-tight">
+            M<span class="text-carmin">&amp;</span>R Love&nbsp;Tours
+          </span>
+        </a>
+        <p class="font-mono hidden text-[11px] uppercase tracking-[0.18em] text-navy sm:block">
+          Atlas de nos étés · {firstYear}–{lastYear}
+        </p>
+      </nav>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="mt-16 border-t-2 border-navy sm:mt-24">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-baseline justify-between gap-2 px-4 py-8 sm:px-6">
+        <p class="text-sm text-ink-soft">Un été sur deux à vélo, l'autre à pied — toujours à deux. <span class="text-carmin">❤</span></p>
+        <p class="font-mono text-[10px] uppercase tracking-[0.18em] text-navy">
+          {firstYear}–{lastYear} · Site par <a href="https://www.renaudgouffe.fr/" target="_blank" rel="noopener" class="underline decoration-navy/30 underline-offset-2 transition hover:text-carmin">rndgf</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

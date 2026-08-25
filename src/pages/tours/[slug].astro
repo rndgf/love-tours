@@ -1,0 +1,280 @@
+---
+import Base from "../../layouts/Base.astro";
+import TourMap from "../../components/TourMap.astro";
+import DayGallery from "../../components/DayGallery.astro";
+import Lightbox from "../../components/Lightbox.astro";
+import {
+  tours,
+  modeIcon,
+  formatRange,
+  formatDay,
+  formatHours,
+  stageName,
+} from "../../lib/tours.js";
+import { dayColor } from "../../lib/palette.js";
+
+export function getStaticPaths() {
+  return tours.map((tour, i) => ({
+    params: { slug: tour.slug },
+    props: { tour, older: tours[i + 1] ?? null, newer: tours[i - 1] ?? null },
+  }));
+}
+const { tour, older, newer } = Astro.props;
+
+const fmtCoord = (v, pos, neg) => {
+  const abs = Math.abs(v);
+  const deg = Math.floor(abs);
+  const min = Math.round((abs - deg) * 60);
+  return `${deg}°${String(min).padStart(2, "0")}′${v >= 0 ? pos : neg}`;
+};
+const cornerNW = `${fmtCoord(tour.bbox[3], "N", "S")} · ${fmtCoord(tour.bbox[0], "E", "O")}`;
+const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2], "E", "O")}`;
+---
+
+<Base
+  title={`${tour.title} ${tour.year} — Love Tours ❤`}
+  description={tour.description}
+>
+  <!-- En-tête -->
+  <section class="mx-auto max-w-6xl px-4 pb-8 pt-8 sm:px-6 sm:pb-10 sm:pt-14">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+      <a
+        href="/"
+        class="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft transition hover:text-carmin"
+        >← tous les Love Tours</a
+      >
+      <div class="font-mono flex gap-4 text-[11px] uppercase tracking-[0.15em]">
+        {
+          older && (
+            <a
+              href={`/tours/${older.slug}/`}
+              class="text-ink-soft transition hover:text-carmin"
+              title={older.title}
+            >
+              ← {older.year}
+            </a>
+          )
+        }
+        {
+          newer && (
+            <a
+              href={`/tours/${newer.slug}/`}
+              class="text-ink-soft transition hover:text-carmin"
+              title={newer.title}
+            >
+              {newer.year} →
+            </a>
+          )
+        }
+      </div>
+    </div>
+    <div class="relative">
+      <span
+        aria-hidden="true"
+        class="font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center text-[7rem] font-semibold leading-none tracking-tight text-navy/[0.045] sm:text-[15rem]"
+        >{tour.year}</span
+      >
+      <p
+        class="font-mono mt-7 text-[11px] font-medium uppercase tracking-[0.2em] text-navy"
+      >
+        {tour.mode}{tour.country && ` · ${tour.country}`}
+      </p>
+      <h1
+        class="font-display mt-1 text-3xl font-semibold tracking-tight sm:text-5xl"
+      >
+        {tour.flag}&nbsp;
+        {tour.title}
+      </h1>
+    </div>
+    <p class="mt-2 text-ink-soft italic">
+      {formatRange(tour.startDate, tour.endDate)}
+    </p>
+    {
+      tour.description && (
+        <p class="mt-4 max-w-2xl text-base text-ink-soft sm:mt-5 sm:text-lg">
+          {tour.description}
+        </p>
+      )
+    }
+
+    <dl class="mt-9 grid grid-cols-2 border-y-2 border-navy sm:grid-cols-4">
+      {
+        [
+          [tour.totals.distanceKm, "km"],
+          [tour.totals.days, "jours"],
+          [tour.totals.gainM, "m dénivelé +"],
+          [formatHours(tour.totals.movingS), "en mouvement"],
+        ].map(([value, label], i) => (
+          <div
+            class={`border-navy/20 px-2 py-3 text-center sm:px-4 sm:py-4
+          ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""}`}
+          >
+            <dd class="font-mono text-xl font-medium text-carmin sm:text-2xl">
+              {value}
+            </dd>
+            <dt class="font-mono mt-0.5 text-[10px] uppercase tracking-[0.18em] text-navy">
+              {label}
+            </dt>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <!-- Planche cartographique -->
+  <section class="mx-auto max-w-6xl px-4 sm:px-6">
+    <figure class="border-2 border-navy bg-white/70">
+      <figcaption
+        class="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-navy px-4 py-2.5"
+      >
+        <span
+          class="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-navy"
+        >
+          Carte — {tour.title} · {tour.year}
+        </span>
+        <span
+          class="font-mono text-[10px] uppercase tracking-[0.12em] text-navy/70"
+          >{cornerNW}</span
+        >
+      </figcaption>
+      <TourMap slug={tour.slug} bbox={tour.bbox} days={tour.days} />
+      <div
+        class="flex flex-wrap items-center justify-between gap-2 border-t-2 border-navy px-4 py-2.5"
+      >
+        <div class="flex flex-wrap gap-1.5">
+          <button
+            data-zoom-day="0"
+            data-zoom-slug={tour.slug}
+            class="font-mono min-h-[40px] border border-navy/30 bg-paper px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:min-h-0 sm:px-2.5 sm:py-1"
+            >Tout</button
+          >
+          {
+            tour.days.filter((day) => !day.noTrace).map((day) => (
+              <button
+                data-zoom-day={day.n}
+                data-zoom-slug={tour.slug}
+                class="font-mono flex min-h-[40px] items-center gap-1.5 border border-navy/30 bg-paper px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:min-h-0 sm:px-2.5 sm:py-1"
+              >
+                <span
+                  class="inline-block h-2 w-2"
+                  style={`background:${dayColor(day.n)}`}
+                />
+                {day.label}
+              </button>
+            ))
+          }
+        </div>
+        <span
+          class="font-mono text-[10px] uppercase tracking-[0.12em] text-navy/70"
+          >{cornerSE}</span
+        >
+      </div>
+    </figure>
+  </section>
+
+  <!-- Journal des journées -->
+  <section
+    class="mx-auto mt-12 max-w-6xl space-y-7 px-4 sm:mt-16 sm:space-y-9 sm:px-6"
+  >
+    {
+      tour.days.map((day) => (
+        <article class="border border-navy/25 bg-white/60 p-4 sm:p-7">
+          <header class="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span
+              class="font-mono inline-flex h-10 w-10 shrink-0 items-center justify-center text-sm font-medium text-white"
+              style={`background:${dayColor(day.n)}`}
+            >
+              {day.label}
+            </span>
+            <div>
+              <h2 class="font-display text-2xl font-semibold tracking-tight">
+                {formatDay(day.date)}
+                {stageName(day.name, tour.title) && (
+                  <span class="font-normal text-ink-soft">
+                    {" "}
+                    — {stageName(day.name, tour.title)}
+                  </span>
+                )}
+              </h2>
+              {!day.noTrace && (
+              <p class="font-mono mt-1 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-navy">
+                <span>
+                  <strong class="font-medium text-carmin">
+                    {day.distanceKm}
+                  </strong>
+                   km
+                </span>
+                <span>{day.gainM} m D+</span>
+                <span>{formatHours(day.movingS)} en mouvement</span>
+                <span>{formatHours(day.elapsedS)} au total</span>
+                {day.estimated && (
+                  <span
+                    class="border border-navy/30 bg-paper-deep px-1.5 uppercase tracking-[0.1em]"
+                    title="Activité non enregistrée : tracé planifié, temps extrapolés de l'allure des autres jours"
+                  >
+                    estimé
+                  </span>
+                )}
+              </p>
+              )}
+            </div>
+          </header>
+          <DayGallery slug={tour.slug} day={day.n} eager={day.n === 1} />
+        </article>
+      ))
+    }
+  </section>
+
+  <!-- Navigation entre éditions -->
+  <nav
+    class="mx-auto mt-14 flex max-w-6xl items-center justify-center gap-16 px-4 sm:px-6"
+    aria-label="Autres Love Tours"
+  >
+    {
+      older && (
+        <a
+          href={`/tours/${older.slug}/`}
+          title={`${older.year} · ${older.title}`}
+          aria-label={`Édition précédente : ${older.title} ${older.year}`}
+          class="text-4xl text-navy/60 transition hover:text-carmin"
+        >
+          ←
+        </a>
+      )
+    }
+    {
+      newer && (
+        <a
+          href={`/tours/${newer.slug}/`}
+          title={`${newer.year} · ${newer.title}`}
+          aria-label={`Édition suivante : ${newer.title} ${newer.year}`}
+          class="text-4xl text-navy/60 transition hover:text-carmin"
+        >
+          →
+        </a>
+      )
+    }
+  </nav>
+
+  <!-- Retour en haut -->
+  <button
+    id="back-to-top"
+    aria-label="Retour en haut"
+    class="font-mono fixed bottom-5 right-5 z-20 h-11 w-11 items-center justify-center border border-navy/40 bg-paper text-lg text-navy shadow-sm transition hover:border-navy"
+    style="display:none">↑</button
+  >
+
+  <script>
+    const btn = document.getElementById("back-to-top")!;
+    btn.addEventListener("click", () =>
+      window.scrollTo({ top: 0, behavior: "smooth" }),
+    );
+    const toggle = () => {
+      btn.style.display = window.scrollY < 600 ? "none" : "flex";
+    };
+    window.addEventListener("scroll", toggle, { passive: true });
+    toggle();
+  </script>
+
+  <Lightbox />
+</Base>

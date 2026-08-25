@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+
+# Photos personnelles et traces sources : jamais dans git (repo public).
+# Les originaux vivent en local + sauvegarde perso.
+editions/
+src/assets/tours/
+
+# Données Natural Earth (28 Mo, retéléchargeables — voir README)
+data/naturalearth/

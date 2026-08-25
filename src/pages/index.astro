@@ -1,0 +1,163 @@
+---
+import Base from "../layouts/Base.astro";
+import MiniMap from "../components/MiniMap.astro";
+import { Image } from "astro:assets";
+import { tours, modeIcon, formatRange } from "../lib/tours.js";
+import { coverFor } from "../lib/photos.js";
+
+const totalKm = Math.round(tours.reduce((s, t) => s + t.totals.distanceKm, 0));
+const totalDays = tours.reduce((s, t) => s + t.totals.days, 0);
+const totalGain = tours.reduce((s, t) => s + t.totals.gainM, 0);
+const firstYear = Math.min(...tours.map((t) => t.year));
+---
+
+<Base title="Love Tours ❤ — nos étés à deux">
+  <!-- Héro -->
+  <section
+    class="mx-auto max-w-6xl px-4 pb-10 pt-12 text-center sm:px-6 sm:pb-14 sm:pt-24"
+  >
+    <p
+      class="font-mono text-[11px] font-medium uppercase tracking-[0.3em] text-carmin"
+    >
+      depuis {firstYear}
+    </p>
+    <h1
+      class="font-display mx-auto mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight sm:text-6xl"
+    >
+      Chaque été, une déconnexion,<br /><em>une reconnexion.</em>
+    </h1>
+    <p class="mx-auto mt-5 max-w-xl text-base text-ink-soft sm:text-lg">
+      En amoureux, sur les routes et les chemins. Une année à vélo, l'autre à
+      pied — les <em>Love Tours</em> sont nos itinérances d'été : les traces, les
+      kilomètres, les images.
+    </p>
+  </section>
+
+  <!-- Relevés cumulés, façon cartouche d'atlas -->
+  <section class="mx-auto max-w-4xl px-4 sm:px-6">
+    <dl class="grid grid-cols-2 border-y-2 border-navy sm:grid-cols-4">
+      {
+        [
+          [tours.length, "expéditions"],
+          [`${totalKm}`, "km parcourus"],
+          [totalDays, "jours dehors"],
+          [`${totalGain}`, "m de dénivelé +"],
+        ].map(([value, label], i) => (
+          <div
+            class={`border-navy/20 px-3 py-4 text-center sm:px-4 sm:py-5
+          ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""}`}
+          >
+            <dd class="font-mono text-2xl font-medium text-carmin sm:text-3xl">
+              {value}
+            </dd>
+            <dt class="font-mono mt-1 text-[10px] uppercase tracking-[0.18em] text-navy">
+              {label}
+            </dt>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <!-- Planches des éditions -->
+  <section class="mx-auto mt-12 max-w-6xl px-4 sm:mt-16 sm:px-6">
+    <ol class="space-y-8">
+      {
+        tours.map((tour, ti) => {
+          const cover = coverFor(tour);
+          return (
+            <li>
+              <a
+                href={`/tours/${tour.slug}/`}
+                class={`group relative grid gap-5 overflow-hidden border border-navy/25 bg-white/60 p-4 transition hover:border-navy hover:shadow-lg hover:shadow-navy/5 sm:gap-6 sm:p-7 ${cover ? "sm:grid-cols-[210px_1fr_210px]" : "sm:grid-cols-[230px_1fr]"}`}
+              >
+                <span
+                  aria-hidden="true"
+                  class="font-display pointer-events-none absolute inset-0 hidden select-none items-center justify-center text-[11rem] font-semibold leading-none tracking-tight text-navy/[0.045] sm:flex"
+                >
+                  {tour.year}
+                </span>
+                {cover && (
+                  <div class="relative -mx-4 -mt-4 sm:hidden">
+                    <Image
+                      src={cover}
+                      width={640}
+                      widths={[320, 640]}
+                      sizes="100vw"
+                      alt=""
+                      loading={ti === 0 ? "eager" : "lazy"}
+                      fetchpriority={ti === 0 ? "high" : "auto"}
+                      class="aspect-[16/10] w-full object-cover grayscale"
+                    />
+                  </div>
+                )}
+                <MiniMap
+                  slug={tour.slug}
+                  class="relative mx-auto hidden w-44 self-center sm:block sm:w-full"
+                />
+                <div class="relative flex flex-col justify-center">
+                  <p class="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-navy">
+                    <span class="text-carmin">{tour.year}</span> ·{" "}
+                    {modeIcon(tour.mode)} {tour.mode}
+                    {tour.country && ` · ${tour.country}`}
+                  </p>
+                  <h2 class="font-display mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+                    {tour.flag} {tour.title}
+                  </h2>
+                  <p class="mt-1 text-sm text-ink-soft">
+                    {formatRange(tour.startDate, tour.endDate)}
+                  </p>
+                  {tour.description && (
+                    <p class="mt-4 max-w-2xl text-ink-soft">
+                      {tour.description}
+                    </p>
+                  )}
+                  <p class="font-mono mt-5 flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-navy">
+                    <span>
+                      <strong class="font-medium text-carmin">
+                        {Math.round(tour.totals.distanceKm)}
+                      </strong>
+                       km
+                    </span>
+                    <span>
+                      <strong class="font-medium text-carmin">
+                        {tour.totals.days}
+                      </strong>{" "}
+                      jours
+                    </span>
+                    <span>
+                      <strong class="font-medium text-carmin">
+                        {tour.totals.gainM}
+                      </strong>
+                       m D+
+                    </span>
+                    {tour.totals.photos > 0 && (
+                      <span>
+                        <strong class="font-medium text-carmin">
+                          {tour.totals.photos}
+                        </strong>{" "}
+                        photos
+                      </span>
+                    )}
+                  </p>
+                </div>
+                {cover && (
+                  <div class="relative hidden self-center overflow-hidden sm:block">
+                    <Image
+                      src={cover}
+                      width={640}
+                      widths={[320, 640]}
+                      sizes="210px"
+                      alt=""
+                      class="aspect-square w-full object-cover"
+                    />
+                  </div>
+                )}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </section>
+</Base>

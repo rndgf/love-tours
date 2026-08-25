@@ -1,0 +1,77 @@
+---
+import { Image, getImage } from "astro:assets";
+import { photosFor } from "../lib/photos.js";
+
+/** Galerie d'une journée, façon carnet de bord : première photo en grand, le reste en grille. */
+interface Props {
+  slug: string;
+  day: number;
+  eager?: boolean;
+}
+const { slug, day, eager = false } = Astro.props;
+const VISIBLE = 9; // au-delà : repli sous « + N photos »
+
+const photos = photosFor(slug, day);
+// Version 1600 px pour la lightbox (les originaux font 4-5 Mo).
+const fulls = await Promise.all(
+  photos.map((p) => getImage({ src: p, width: 1600, format: "webp" }))
+);
+const items = photos.map((image, i) => ({ image, full: fulls[i].src }));
+const lead = items[0];
+const grid = items.slice(1, VISIBLE);
+const rest = items.slice(VISIBLE);
+const lb = `${slug}-day-${day}`;
+---
+
+{items.length > 0 && (
+  <div class="mt-6">
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <a href={lead.full} data-lightbox={lb} class="group col-span-2 row-span-2 block border border-navy/20 bg-white p-1">
+        <Image
+          src={lead.image}
+          width={1080}
+          widths={[640, 1080]}
+          sizes="(min-width: 640px) 50vw, 100vw"
+          alt=""
+          loading={eager ? "eager" : "lazy"}
+          fetchpriority={eager ? "high" : "auto"}
+          class="aspect-[4/3] h-full w-full object-cover transition duration-300 group-hover:opacity-90"
+        />
+      </a>
+      {grid.map((item) => (
+        <a href={item.full} data-lightbox={lb} class="group block border border-navy/20 bg-white p-1">
+          <Image
+            src={item.image}
+            width={640}
+            widths={[320, 640]}
+            sizes="(min-width: 640px) 25vw, 50vw"
+            alt=""
+            class="aspect-[4/3] w-full object-cover transition duration-300 group-hover:opacity-90"
+          />
+        </a>
+      ))}
+    </div>
+    {rest.length > 0 && (
+      <details class="group/d mt-2">
+        <summary class="font-mono cursor-pointer list-none border border-navy/30 bg-paper px-3 py-1.5 text-center text-[11px] uppercase tracking-[0.15em] text-navy transition hover:border-navy">
+          <span class="group-open/d:hidden">+ {rest.length} photos</span>
+          <span class="hidden group-open/d:inline">replier</span>
+        </summary>
+        <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {rest.map((item) => (
+            <a href={item.full} data-lightbox={lb} class="group block border border-navy/20 bg-white p-1">
+              <Image
+                src={item.image}
+                width={640}
+                widths={[320, 640]}
+                sizes="(min-width: 640px) 25vw, 50vw"
+                alt=""
+                class="aspect-[4/3] w-full object-cover transition duration-300 group-hover:opacity-90"
+              />
+            </a>
+          ))}
+        </div>
+      </details>
+    )}
+  </div>
+)}

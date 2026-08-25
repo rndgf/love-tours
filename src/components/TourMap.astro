@@ -1,0 +1,106 @@
+---
+/**
+ * Carte MapLibre : fond vectoriel OpenFreeMap (style Positron, sobre),
+ * une ligne colorée par journée, chargée depuis public/tours/<slug>.geojson.
+ */
+interface Props {
+  slug: string;
+  bbox: [number, number, number, number];
+  days: { n: number; name: string }[];
+}
+const { slug, bbox, days } = Astro.props;
+---
+
+<div
+  class="tour-map relative h-[55vh] min-h-[340px] w-full overflow-hidden sm:h-[65vh] sm:min-h-[420px]"
+  data-slug={slug}
+  data-bbox={JSON.stringify(bbox)}
+  data-days={JSON.stringify(days.map((d) => d.n))}
+>
+</div>
+
+<script>
+  import { dayColor } from "../lib/palette.js";
+
+  // MapLibre pèse ~1 Mo : chargé uniquement quand la carte approche du viewport.
+  async function initMap(el: HTMLElement) {
+    const [{ default: maplibregl }] = await Promise.all([
+      import("maplibre-gl"),
+      import("maplibre-gl/dist/maplibre-gl.css"),
+    ]);
+    const slug = el.dataset.slug!;
+    const bbox = JSON.parse(el.dataset.bbox!) as [number, number, number, number];
+    const dayNumbers = JSON.parse(el.dataset.days!) as number[];
+
+    const map = new maplibregl.Map({
+      container: el,
+      style: "https://tiles.openfreemap.org/styles/positron",
+      bounds: [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+      fitBoundsOptions: { padding: 48 },
+      cooperativeGestures: true,
+      attributionControl: { compact: true },
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new maplibregl.FullscreenControl(), "top-right");
+
+    map.on("load", async () => {
+      const geojson = await fetch(`${import.meta.env.BASE_URL}tours/${slug}.geojson`).then((r) => r.json());
+      map.addSource("trace", { type: "geojson", data: geojson });
+
+      // Halo clair sous la trace pour la détacher du fond.
+      map.addLayer({
+        id: "trace-halo",
+        type: "line",
+        source: "trace",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.85 },
+      });
+      map.addLayer({
+        id: "trace-line",
+        type: "line",
+        source: "trace",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-width": 3,
+          "line-color": [
+            "match",
+            ["get", "day"],
+            ...dayNumbers.flatMap((n) => [n, dayColor(n)]),
+            "#cf3f56",
+          ],
+        },
+      });
+
+      // Zoom sur une journée quand on clique sa puce dans la légende.
+      document.querySelectorAll<HTMLElement>(`[data-zoom-day][data-zoom-slug="${slug}"]`).forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const day = +btn.dataset.zoomDay!;
+          if (day === 0) {
+            map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 48 });
+            return;
+          }
+          const feat = geojson.features.find((f: any) => f.properties.day === day);
+          if (!feat) return;
+          const coords: number[][] = feat.geometry.type === "MultiLineString"
+            ? feat.geometry.coordinates.flat()
+            : feat.geometry.coordinates;
+          const lons = coords.map((c) => c[0]);
+          const lats = coords.map((c) => c[1]);
+          map.fitBounds(
+            [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
+            { padding: 48 }
+          );
+        });
+      });
+    });
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      observer.unobserve(entry.target);
+      initMap(entry.target as HTMLElement);
+    }
+  }, { rootMargin: "600px" });
+  document.querySelectorAll<HTMLElement>(".tour-map").forEach((el) => observer.observe(el));
+</script>
