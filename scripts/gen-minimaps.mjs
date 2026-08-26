@@ -102,7 +102,7 @@ fs.mkdirSync(path.join(ROOT, "src/data/minimaps"), { recursive: true });
 for (const file of fs.readdirSync(path.join(ROOT, "public/tours")).filter((f) => f.endsWith(".geojson"))) {
   const slug = file.replace(".geojson", "");
   const g = JSON.parse(fs.readFileSync(path.join(ROOT, "public/tours", file), "utf8"));
-  const segs = g.features.flatMap((f) =>
+  const segs = g.features.filter((f) => !f.properties?.transfer).flatMap((f) =>
     f.geometry.type === "MultiLineString" ? f.geometry.coordinates : [f.geometry.coordinates]);
   const all = segs.flat();
 

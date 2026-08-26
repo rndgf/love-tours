@@ -655,7 +655,9 @@
    "movingS": 11127,
    "elapsedS": 19251,
    "startTime": "2026-08-17T10:45:54.000Z",
-   "endTime": "2026-08-17T16:06:45.000Z"
+   "endTime": "2026-08-17T16:06:45.000Z",
+   "from": "Vlissingen",
+   "to": "Veere"
   },
   {
    "n": 2,
@@ -671,7 +673,9 @@
    "movingS": 13654,
    "elapsedS": 23023,
    "startTime": "2026-08-18T08:06:16.000Z",
-   "endTime": "2026-08-18T14:29:59.000Z"
+   "endTime": "2026-08-18T14:29:59.000Z",
+   "from": "Veere",
+   "to": "Zierikzee"
   },
   {
    "n": 3,
@@ -687,7 +691,9 @@
    "movingS": 10864,
    "elapsedS": 18123,
    "startTime": "2026-08-19T08:49:17.000Z",
-   "endTime": "2026-08-19T13:51:20.000Z"
+   "endTime": "2026-08-19T13:51:20.000Z",
+   "from": "Zierikzee",
+   "to": "Ouddorp"
   },
   {
    "n": 4,
@@ -703,7 +709,9 @@
    "movingS": 12181,
    "elapsedS": 20640,
    "startTime": "2026-08-20T08:57:09.000Z",
-   "endTime": "2026-08-20T14:41:09.000Z"
+   "endTime": "2026-08-20T14:41:09.000Z",
+   "from": "Ouddorp",
+   "to": "Zierikzee"
   },
   {
    "n": 5,
@@ -719,7 +727,9 @@
    "movingS": 12011,
    "elapsedS": 17428,
    "startTime": "2026-08-21T09:05:16.000Z",
-   "endTime": "2026-08-21T13:55:44.000Z"
+   "endTime": "2026-08-21T13:55:44.000Z",
+   "from": "Zierikzee",
+   "to": "Middelburg"
   },
   {
    "n": 6,
@@ -735,7 +745,9 @@
    "movingS": 1668,
    "elapsedS": 1989,
    "startTime": "2026-08-22T09:10:32.000Z",
-   "endTime": "2026-08-22T09:43:41.000Z"
+   "endTime": "2026-08-22T09:43:41.000Z",
+   "from": "Middelburg",
+   "to": "Vlissingen"
   }
  ]
 }

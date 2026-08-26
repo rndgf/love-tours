@@ -31,6 +31,7 @@ const { slug, bbox, days } = Astro.props;
     const slug = el.dataset.slug!;
     const bbox = JSON.parse(el.dataset.bbox!) as [number, number, number, number];
     const dayNumbers = JSON.parse(el.dataset.days!) as number[];
+    const NAVY = "#1e2f4d";
 
     const map = new maplibregl.Map({
       container: el,
@@ -52,6 +53,7 @@ const { slug, bbox, days } = Astro.props;
         id: "trace-halo",
         type: "line",
         source: "trace",
+        filter: ["!", ["has", "transfer"]],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.85 },
       });
@@ -59,6 +61,7 @@ const { slug, bbox, days } = Astro.props;
         id: "trace-line",
         type: "line",
         source: "trace",
+        filter: ["!", ["has", "transfer"]],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
           "line-width": 3,
@@ -71,27 +74,209 @@ const { slug, bbox, days } = Astro.props;
         },
       });
 
-      // Zoom sur une journée quand on clique sa puce dans la légende.
-      document.querySelectorAll<HTMLElement>(`[data-zoom-day][data-zoom-slug="${slug}"]`).forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const day = +btn.dataset.zoomDay!;
-          if (day === 0) {
-            map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 48 });
-            return;
-          }
-          const feat = geojson.features.find((f: any) => f.properties.day === day);
-          if (!feat) return;
-          const coords: number[][] = feat.geometry.type === "MultiLineString"
-            ? feat.geometry.coordinates.flat()
-            : feat.geometry.coordinates;
-          const lons = coords.map((c) => c[0]);
-          const lats = coords.map((c) => c[1]);
-          map.fitBounds(
-            [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-            { padding: 48 }
-          );
-        });
+      // Transferts (bus…) entre deux étapes : pointillé neutre + label.
+      map.addLayer({
+        id: "transfer-line",
+        type: "line",
+        source: "trace",
+        filter: ["has", "transfer"],
+        layout: { "line-cap": "round" },
+        paint: {
+          "line-color": "#1e2f4d",
+          "line-width": 2,
+          "line-opacity": 0.55,
+          "line-dasharray": [0.5, 2.2],
+        },
       });
+      map.addLayer({
+        id: "transfer-label",
+        type: "symbol",
+        source: "trace",
+        filter: ["has", "transfer"],
+        layout: {
+          "symbol-placement": "line-center",
+          "text-field": ["upcase", ["get", "transfer"]],
+          "text-size": 9,
+          "text-letter-spacing": 0.15,
+          "text-offset": [0, -1],
+        },
+        paint: {
+          "text-color": "#1e2f4d",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.8,
+        },
+      });
+
+      // Flèches directionnelles le long de la trace (sens du parcours).
+      map.addLayer({
+        id: "trace-arrows",
+        type: "symbol",
+        source: "trace",
+        filter: ["!", ["has", "transfer"]],
+        layout: {
+          "symbol-placement": "line",
+          "symbol-spacing": 90,
+          "text-field": "▶",
+          "text-size": 13,
+          "text-keep-upright": false,
+          "text-rotation-alignment": "map",
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+        },
+        paint: {
+          // Navy foncé + halo blanc épais : contraste net quelle que soit la
+          // couleur de la ligne du jour.
+          "text-color": "#1e2f4d",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 2,
+        },
+      });
+
+      // Départ (premier point du premier jour) et arrivée (dernier point du
+      // dernier jour). Boucle (départ ≈ arrivée) : un seul marqueur au label
+      // combiné, cerclé deux fois.
+      const lineCoords = (f: any): number[][] =>
+        f.geometry.type === "MultiLineString" ? f.geometry.coordinates.flat() : f.geometry.coordinates;
+      const traced = geojson.features
+        .filter((f: any) => /LineString/.test(f.geometry.type) && !f.properties.transfer)
+        .sort((a: any, b: any) => a.properties.day - b.properties.day);
+      // Un transfert amenant au premier jour (toDay=1 sans fromDay) déplace le
+      // vrai départ à son origine ; symétrique pour l'arrivée (ex. ferry 2026).
+      const preTransfer = geojson.features.find(
+        (f: any) => f.properties.transfer && f.properties.toDay === 1 && f.properties.fromDay == null,
+      );
+      const postTransfer = geojson.features.find(
+        (f: any) => f.properties.transfer && f.properties.fromDay === traced.at(-1).properties.day && f.properties.toDay == null,
+      );
+      const start = preTransfer ? preTransfer.geometry.coordinates[0] : lineCoords(traced[0])[0];
+      const endCoords = postTransfer ? postTransfer.geometry.coordinates : lineCoords(traced[traced.length - 1]);
+      const end = endCoords[endCoords.length - 1];
+      const distM =
+        Math.hypot(
+          (end[0] - start[0]) * 111320 * Math.cos((start[1] * Math.PI) / 180),
+          (end[1] - start[1]) * 111320,
+        );
+      const isLoop = distM < 500;
+      const markers = {
+        type: "FeatureCollection",
+        features: isLoop
+          ? [{ type: "Feature", properties: { kind: "start", label: "départ · arrivée" }, geometry: { type: "Point", coordinates: start } }]
+          : [
+              { type: "Feature", properties: { kind: "start", label: "départ" }, geometry: { type: "Point", coordinates: start } },
+              { type: "Feature", properties: { kind: "end", label: "arrivée" }, geometry: { type: "Point", coordinates: end } },
+            ],
+      };
+      // Lieux d'étape : jonctions entre jours consécutifs (fin Jn / début Jn+1),
+      // un seul point si les deux se confondent, deux sinon (transfert entre eux).
+      const stagePoints: number[][] = [];
+      for (let i = 0; i < traced.length - 1; i++) {
+        const a = lineCoords(traced[i]).at(-1)!;
+        const b = lineCoords(traced[i + 1])[0];
+        const d = Math.hypot(
+          (b[0] - a[0]) * 111320 * Math.cos((a[1] * Math.PI) / 180),
+          (b[1] - a[1]) * 111320,
+        );
+        stagePoints.push(a);
+        if (d > 500) stagePoints.push(b);
+      }
+      map.addSource("stages", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: stagePoints.map((c) => ({
+            type: "Feature", properties: {}, geometry: { type: "Point", coordinates: c },
+          })),
+        } as any,
+      });
+      // Étapes : petit rond blanc cerclé navy, plus discret que départ/arrivée.
+      map.addLayer({
+        id: "stage-points",
+        type: "circle",
+        source: "stages",
+        paint: {
+          "circle-radius": 3.5,
+          "circle-color": "#ffffff",
+          "circle-stroke-color": NAVY,
+          "circle-stroke-width": 1.5,
+        },
+      });
+
+      map.addSource("markers", { type: "geojson", data: markers as any });
+      // Départ : disque plein navy ; arrivée : anneau navy sur fond blanc.
+      map.addLayer({
+        id: "marker-points",
+        type: "circle",
+        source: "markers",
+        paint: {
+          "circle-radius": 6,
+          "circle-color": ["match", ["get", "kind"], "start", NAVY, "#ffffff"],
+          "circle-stroke-color": ["match", ["get", "kind"], "start", "#ffffff", NAVY],
+          "circle-stroke-width": 2.5,
+        },
+      });
+      if (isLoop) {
+        // Second anneau : signale que départ et arrivée se confondent.
+        map.addLayer({
+          id: "marker-loop-ring",
+          type: "circle",
+          source: "markers",
+          paint: {
+            "circle-radius": 11,
+            "circle-color": "rgba(0,0,0,0)",
+            "circle-stroke-color": NAVY,
+            "circle-stroke-width": 1.5,
+          },
+        });
+      }
+      map.addLayer({
+        id: "marker-labels",
+        type: "symbol",
+        source: "markers",
+        layout: {
+          "text-field": ["get", "label"],
+          "text-size": 11,
+          "text-transform": "uppercase",
+          "text-letter-spacing": 0.15,
+          "text-offset": [0, 1.3],
+          "text-anchor": "top",
+          "text-allow-overlap": true,
+        },
+        paint: {
+          "text-color": "#1e2f4d",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.8,
+        },
+      });
+
+      // Zoom + mise en valeur d'une journée (puces de la légende, hash #jN).
+      const applyDay = (day: number) => {
+        // Estompe les autres jours (0 = tout : opacité pleine partout).
+        const sel = (on: number, off: number) =>
+          day === 0 ? on : ["case", ["==", ["get", "day"], day], on, off];
+        map.setPaintProperty("trace-line", "line-opacity", sel(1, 0.2));
+        map.setPaintProperty("trace-halo", "line-opacity", sel(0.85, 0.15));
+        map.setPaintProperty("trace-arrows", "text-opacity", sel(1, 0));
+        if (day === 0) {
+          map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 48 });
+          return;
+        }
+        const feat = geojson.features.find((f: any) => f.properties.day === day);
+        if (!feat) return;
+        const coords: number[][] = feat.geometry.type === "MultiLineString"
+          ? feat.geometry.coordinates.flat()
+          : feat.geometry.coordinates;
+        const lons = coords.map((c) => c[0]);
+        const lats = coords.map((c) => c[1]);
+        map.fitBounds(
+          [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
+          { padding: 48 }
+        );
+      };
+      document.querySelectorAll<HTMLElement>(`[data-zoom-day][data-zoom-slug="${slug}"]`).forEach((btn) => {
+        btn.addEventListener("click", () => applyDay(+btn.dataset.zoomDay!));
+      });
+      const initial = /^#j(\d+)$/i.exec(location.hash);
+      if (initial && dayNumbers.includes(+initial[1])) applyDay(+initial[1]);
     });
   }
 

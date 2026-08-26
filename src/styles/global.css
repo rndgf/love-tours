@@ -9,6 +9,8 @@
   /* Atlas : encre marine des cadres, carmin des traces */
   --color-navy: #1e2f4d;
   --color-carmin: #b3402f;
+  /* Second accent : vert sapin des éditions à pied (le carmin reste au vélo) */
+  --color-sapin: #3e6b4f;
   --color-love: #b3402f;
   --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
   --font-body: "Inter Variable", ui-sans-serif, system-ui, sans-serif;

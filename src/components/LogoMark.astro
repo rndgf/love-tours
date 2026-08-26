@@ -1,0 +1,38 @@
+---
+/**
+ * Picto M&R Love Tours : roue de vélo (pneu, jante, 12 rayons), cœur carmin
+ * au moyeu, sentier pointillé (rando). Utilisé dans le header et le footer.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+// 12 rayons du moyeu (18,16) vers la jante (r = 10.6), tous les 30°.
+const CX = 18, CY = 16, R = 10.6;
+const spokes = Array.from({ length: 12 }, (_, i) => {
+  const a = (i * 30 * Math.PI) / 180;
+  return `M${CX},${CY} L${(CX + R * Math.cos(a)).toFixed(2)},${(CY + R * Math.sin(a)).toFixed(2)}`;
+}).join(" ");
+---
+
+<svg viewBox="0 0 36 36" class={className} aria-hidden="true">
+  <!-- Pneu (trait épais) puis jante -->
+  <circle cx={CX} cy={CY} r="13" fill="none" class="stroke-navy" stroke-width="2" />
+  <circle cx={CX} cy={CY} r="10.6" fill="none" class="stroke-navy" stroke-width="0.9" />
+  <path d={spokes} class="stroke-navy" stroke-width="0.7" fill="none" />
+  <!-- Cœur au moyeu, recouvre le centre des rayons -->
+  <path
+    d="M18 22.5 C12.5 18 10.8 14.4 13.6 11.9 C15.6 10.2 17.6 11.6 18 13.2 C18.4 11.6 20.4 10.2 22.4 11.9 C25.2 14.4 23.5 18 18 22.5 Z"
+    fill="var(--color-carmin)"
+  />
+  <!-- Sentier pointillé -->
+  <path
+    d="M3 33.5 Q10 30.5 18 32.5 T33 31.5"
+    fill="none"
+    class="stroke-navy/60"
+    stroke-width="1.6"
+    stroke-dasharray="2.5 3"
+    stroke-linecap="round"
+  />
+</svg>

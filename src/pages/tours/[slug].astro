@@ -20,6 +20,9 @@ export function getStaticPaths() {
   }));
 }
 const { tour, older, newer } = Astro.props;
+const accentText = tour.mode === "vélo" ? "text-carmin" : "text-sapin";
+// Survol des liens de navigation : accent de l'édition CIBLE (carmin vélo, sapin à pied)
+const hoverAccent = (t) => (t?.mode === "vélo" ? "hover:text-carmin" : "hover:text-sapin");
 
 const fmtCoord = (v, pos, neg) => {
   const abs = Math.abs(v);
@@ -28,7 +31,11 @@ const fmtCoord = (v, pos, neg) => {
   return `${deg}°${String(min).padStart(2, "0")}′${v >= 0 ? pos : neg}`;
 };
 const cornerNW = `${fmtCoord(tour.bbox[3], "N", "S")} · ${fmtCoord(tour.bbox[0], "E", "O")}`;
-const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2], "E", "O")}`;
+
+// Modes de transfert (bus…) présents dans la trace : pilote la légende des pointillés.
+import fs from "node:fs";
+const geo = JSON.parse(fs.readFileSync(`public/tours/${tour.slug}.geojson`, "utf8"));
+const transferModes = [...new Set(geo.features.map((f) => f.properties.transfer).filter(Boolean))];
 ---
 
 <Base
@@ -48,7 +55,7 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
           older && (
             <a
               href={`/tours/${older.slug}/`}
-              class="text-ink-soft transition hover:text-carmin"
+              class={`text-ink-soft transition ${hoverAccent(older)}`}
               title={older.title}
             >
               ← {older.year}
@@ -59,7 +66,7 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
           newer && (
             <a
               href={`/tours/${newer.slug}/`}
-              class="text-ink-soft transition hover:text-carmin"
+              class={`text-ink-soft transition ${hoverAccent(newer)}`}
               title={newer.title}
             >
               {newer.year} →
@@ -97,7 +104,7 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
       )
     }
 
-    <dl class="mt-9 grid grid-cols-2 border-y-2 border-navy sm:grid-cols-4">
+    <dl id="edition-stats" class="mt-9 grid grid-cols-2 border-y-2 border-navy sm:grid-cols-4">
       {
         [
           [tour.totals.distanceKm, "km"],
@@ -109,7 +116,7 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
             class={`border-navy/20 px-2 py-3 text-center sm:px-4 sm:py-4
           ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""}`}
           >
-            <dd class="font-mono text-xl font-medium text-carmin sm:text-2xl">
+            <dd class={`font-mono text-xl font-medium ${accentText} sm:text-2xl`}>
               {value}
             </dd>
             <dt class="font-mono mt-0.5 text-[10px] uppercase tracking-[0.18em] text-navy">
@@ -124,18 +131,10 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
   <!-- Planche cartographique -->
   <section class="mx-auto max-w-6xl px-4 sm:px-6">
     <figure class="border-2 border-navy bg-white/70">
-      <figcaption
-        class="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-navy px-4 py-2.5"
-      >
-        <span
-          class="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-navy"
-        >
-          Carte — {tour.title} · {tour.year}
+      <figcaption class="border-b-2 border-navy px-4 py-2">
+        <span class="font-display text-lg font-semibold tracking-wide text-navy">
+          {cornerNW}
         </span>
-        <span
-          class="font-mono text-[10px] uppercase tracking-[0.12em] text-navy/70"
-          >{cornerNW}</span
-        >
       </figcaption>
       <TourMap slug={tour.slug} bbox={tour.bbox} days={tour.days} />
       <div
@@ -145,7 +144,7 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
           <button
             data-zoom-day="0"
             data-zoom-slug={tour.slug}
-            class="font-mono min-h-[40px] border border-navy/30 bg-paper px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:min-h-0 sm:px-2.5 sm:py-1"
+            class="font-mono min-h-[30px] border border-navy/30 bg-paper px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:min-h-0 sm:px-2.5 sm:py-1 sm:text-[11px]"
             >Tout</button
           >
           {
@@ -153,7 +152,7 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
               <button
                 data-zoom-day={day.n}
                 data-zoom-slug={tour.slug}
-                class="font-mono flex min-h-[40px] items-center gap-1.5 border border-navy/30 bg-paper px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:min-h-0 sm:px-2.5 sm:py-1"
+                class="font-mono flex min-h-[30px] items-center gap-1 border border-navy/30 bg-paper px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:gap-1.5 sm:min-h-0 sm:px-2.5 sm:py-1 sm:text-[11px]"
               >
                 <span
                   class="inline-block h-2 w-2"
@@ -164,10 +163,16 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
             ))
           }
         </div>
-        <span
-          class="font-mono text-[10px] uppercase tracking-[0.12em] text-navy/70"
-          >{cornerSE}</span
-        >
+        {
+          transferModes.length > 0 && (
+            <span class="font-mono flex items-center gap-2 text-[10px] uppercase tracking-[0.12em] text-navy/70">
+              <svg width="26" height="4" viewBox="0 0 26 4" aria-hidden="true">
+                <path d="M2 2 H24" class="stroke-navy/60" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.5 5" />
+              </svg>
+              liaison en {transferModes.join(", ")}
+            </span>
+          )
+        }
       </div>
     </figure>
   </section>
@@ -179,45 +184,100 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
     {
       tour.days.map((day) => (
         <article class="border border-navy/25 bg-white/60 p-4 sm:p-7">
-          <header class="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span
-              class="font-mono inline-flex h-10 w-10 shrink-0 items-center justify-center text-sm font-medium text-white"
-              style={`background:${dayColor(day.n)}`}
-            >
-              {day.label}
-            </span>
-            <div>
-              <h2 class="font-display text-2xl font-semibold tracking-tight">
-                {formatDay(day.date)}
-                {stageName(day.name, tour.title) && (
-                  <span class="font-normal text-ink-soft">
-                    {" "}
-                    — {stageName(day.name, tour.title)}
-                  </span>
-                )}
-              </h2>
-              {!day.noTrace && (
-              <p class="font-mono mt-1 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-navy">
-                <span>
-                  <strong class="font-medium text-carmin">
-                    {day.distanceKm}
-                  </strong>
-                   km
+          <header class="sm:flex sm:items-center sm:justify-between sm:gap-6">
+            <div class="min-w-0">
+              <div class="flex items-stretch gap-3">
+                <span
+                  class="font-mono flex w-9 shrink-0 items-center justify-center text-xs font-medium text-white"
+                  style={`background:${dayColor(day.n)}`}
+                >
+                  {day.label}
                 </span>
-                <span>{day.gainM} m D+</span>
-                <span>{formatHours(day.movingS)} en mouvement</span>
-                <span>{formatHours(day.elapsedS)} au total</span>
-                {day.estimated && (
-                  <span
-                    class="border border-navy/30 bg-paper-deep px-1.5 uppercase tracking-[0.1em]"
-                    title="Activité non enregistrée : tracé planifié, temps extrapolés de l'allure des autres jours"
-                  >
-                    estimé
+                <div class="min-w-0">
+                  <p class="font-mono flex items-center gap-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-navy">
+                    {formatDay(day.date)}
+                    {day.estimated && (
+                      <span
+                        class="border border-navy/30 bg-paper-deep px-1.5 py-0.5 tracking-[0.1em]"
+                        title="Activité non enregistrée : tracé planifié, temps extrapolés de l'allure des autres jours"
+                      >
+                        estimé
+                      </span>
+                    )}
+                  </p>
+                  <h2 class="font-display mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
+                {day.title
+                  ? day.title
+                  : day.from && day.to
+                    ? day.from === day.to
+                      ? `Boucle depuis ${day.from}`
+                      : `${/^[aeiouyàâéèêëîïôùûh]/i.test(day.from) ? "D'" : "De "}${day.from} à ${day.to}`
+                    : stageName(day.name, tour.title) || formatDay(day.date)}
+                  </h2>
+                </div>
+              </div>
+              {!day.noTrace && (
+                <p class="font-mono mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-navy sm:hidden">
+                  <span class="flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="stroke-navy" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+                      <path d="M2 12 C5 8 7 13 10 9 S14 5 14 4" />
+                      <circle cx="2" cy="12" r="1.2" class="fill-navy" stroke="none" />
+                      <path d="M11.5 4 H14 V6.5" />
+                    </svg>
+                    <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{day.distanceKm}</strong>km</span>
                   </span>
-                )}
-              </p>
+                  <span class="flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="stroke-navy" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M1.5 13 L6 5.5 L8.5 9.5 L11 6 L14.5 13 Z" />
+                    </svg>
+                    <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{day.gainM}m</strong>D+</span>
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="stroke-navy" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+                      <path d="M2.5 12 a5.5 5.5 0 1 1 11 0 M8 12 L11.2 8.2" />
+                    </svg>
+                    <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{formatHours(day.movingS)}</strong></span>
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="stroke-navy" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+                      <circle cx="8" cy="8" r="6" />
+                      <path d="M8 4.5 V8 L10.5 9.5" />
+                    </svg>
+                    <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{formatHours(day.elapsedS)}</strong></span>
+                  </span>
+                </p>
               )}
             </div>
+            {!day.noTrace && (
+              <div class="font-mono hidden shrink-0 self-center sm:flex">
+                {[
+                  [`${day.distanceKm}km`, "distance", "M2 12 C5 8 7 13 10 9 S14 5 14 4 M11.5 4 H14 V6.5", "dot"],
+                  [`${day.gainM}mD+`, "dénivelé", "M1.5 13 L6 5.5 L8.5 9.5 L11 6 L14.5 13 Z", ""],
+                  [formatHours(day.movingS), "en mouvement", "M2.5 12 a5.5 5.5 0 1 1 11 0 M8 12 L11.2 8.2", ""],
+                  [formatHours(day.elapsedS), "au total", "M8 4.5 V8 L10.5 9.5", "clock"],
+                ].map(([value, label, icon, extra], i) => (
+                  <div class={`px-3.5 text-center ${i > 0 ? "border-l border-navy/20" : ""}`}>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      class="stroke-navy mx-auto mb-1"
+                      stroke-width="1.3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      {extra === "dot" && <circle cx="2" cy="12" r="1.2" class="fill-navy" stroke="none" />}
+                      {extra === "clock" && <circle cx="8" cy="8" r="6" />}
+                      <path d={icon} />
+                    </svg>
+                    <div class="text-[13px] font-medium" style={`color:${dayColor(day.n)}`}>{value}</div>
+                    <div class="mt-0.5 text-[8px] uppercase tracking-[0.14em] text-navy">{label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </header>
           <DayGallery slug={tour.slug} day={day.n} eager={day.n === 1} />
         </article>
@@ -236,7 +296,7 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
           href={`/tours/${older.slug}/`}
           title={`${older.year} · ${older.title}`}
           aria-label={`Édition précédente : ${older.title} ${older.year}`}
-          class="text-4xl text-navy/60 transition hover:text-carmin"
+          class={`text-4xl text-navy/60 transition ${hoverAccent(older)}`}
         >
           ←
         </a>
@@ -248,7 +308,7 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
           href={`/tours/${newer.slug}/`}
           title={`${newer.year} · ${newer.title}`}
           aria-label={`Édition suivante : ${newer.title} ${newer.year}`}
-          class="text-4xl text-navy/60 transition hover:text-carmin"
+          class={`text-4xl text-navy/60 transition ${hoverAccent(newer)}`}
         >
           →
         </a>
@@ -260,9 +320,49 @@ const cornerSE = `${fmtCoord(tour.bbox[1], "N", "S")} · ${fmtCoord(tour.bbox[2]
   <button
     id="back-to-top"
     aria-label="Retour en haut"
-    class="font-mono fixed bottom-5 right-5 z-20 h-11 w-11 items-center justify-center border border-navy/40 bg-paper text-lg text-navy shadow-sm transition hover:border-navy"
+    class={`font-mono fixed bottom-5 right-5 z-20 h-11 w-11 items-center justify-center border border-navy/40 bg-paper text-lg text-navy shadow-sm transition hover:border-navy ${hoverAccent(tour)}`}
     style="display:none">↑</button
   >
+
+  <script define:vars={{ dayStats: tour.days.filter((d) => !d.noTrace).map((d) => ({ n: d.n, distanceKm: d.distanceKm, gainM: d.gainM, movingS: d.movingS, elapsedS: d.elapsedS, color: dayColor(d.n) })), totals: tour.totals }}>
+    // Clic sur une puce de jour : stats du cartouche (teintées à la couleur du
+    // jour), état actif du bouton, et hash #jN pour survivre au rechargement.
+    const fh = (sec) => `${Math.floor(sec / 3600)}h${String(Math.round((sec % 3600) / 60)).padStart(2, "0")}`;
+    const cells = document.querySelectorAll("#edition-stats > div");
+    const setStats = (rows, color) =>
+      rows.forEach(([value, label], i) => {
+        const dd = cells[i].querySelector("dd");
+        dd.textContent = value;
+        dd.style.color = color ?? "";
+        cells[i].querySelector("dt").textContent = label;
+      });
+    const buttons = [...document.querySelectorAll("[data-zoom-day]")];
+    const selectDay = (n, scroll = true) => {
+      buttons.forEach((b) => b.classList.toggle("border-navy", +b.dataset.zoomDay === n));
+      buttons.forEach((b) => b.classList.toggle("bg-paper-deep", +b.dataset.zoomDay === n));
+      const d = dayStats.find((x) => x.n === n);
+      setStats(
+        d
+          ? [[d.distanceKm, "km"], [d.gainM, "m dénivelé +"], [fh(d.movingS), "en mouvement"], [fh(d.elapsedS), "au total"]]
+          : [[totals.distanceKm, "km"], [totals.days, "jours"], [totals.gainM, "m dénivelé +"], [fh(totals.movingS), "en mouvement"]],
+        d?.color,
+      );
+      history.replaceState(null, "", n > 0 ? `#j${n}` : location.pathname);
+      // Si le cartouche n'est pas visible (clic depuis la carte, plus bas),
+      // remonter en douceur jusqu'à lui.
+      const r = document.getElementById("edition-stats").getBoundingClientRect();
+      if (scroll && (r.top < 0 || r.bottom > innerHeight)) {
+        document.getElementById("edition-stats").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+    buttons.forEach((btn) => btn.addEventListener("click", () => selectDay(+btn.dataset.zoomDay)));
+    const m = /^#j(\d+)$/i.exec(location.hash);
+    if (m && dayStats.some((d) => d.n === +m[1])) selectDay(+m[1], false);
+    // ESC : retour à la vue complète (carte, stats, hash).
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") document.querySelector('[data-zoom-day="0"]')?.click();
+    });
+  </script>
 
   <script>
     const btn = document.getElementById("back-to-top")!;

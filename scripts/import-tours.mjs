@@ -542,6 +542,44 @@ async function importEdition(dirName) {
     }),
   };
 
+  // Transferts entre étapes (edition.json "transfers" : bus, ferry…) : tracé
+  // routier réel via OSRM, mis en cache dans data/transfers/ (versionné) pour
+  // ne pas dépendre du réseau aux imports suivants.
+  for (const t of meta.transfers ?? []) {
+    // Extrémités : point explicite [lon,lat] (t.from / t.to), sinon fin du
+    // jour t.fromDay / début du jour t.toDay.
+    const dayPoint = (n, last) => {
+      const d = days.find((x) => x.n === n);
+      if (!d?.segments.length) return null;
+      const pt = last ? d.segments.at(-1).at(-1) : d.segments[0][0];
+      return [pt.lon, pt.lat];
+    };
+    const a = t.from ?? (t.fromDay != null ? dayPoint(t.fromDay, true) : null);
+    const b = t.to ?? (t.toDay != null ? dayPoint(t.toDay, false) : null);
+    if (!a || !b) continue;
+    let geometry;
+    if (t.direct) {
+      // Liaison directe (ferry…) : segment sur l'eau, pas de routage routier.
+      geometry = { type: "LineString", coordinates: [a, b].map((c) => c.map((v) => +v.toFixed(5))) };
+    } else {
+      const cacheDir = path.join(ROOT, "data/transfers");
+      fs.mkdirSync(cacheDir, { recursive: true });
+      const cacheFile = path.join(cacheDir, `${slug}-${t.fromDay ?? "pt"}-${t.toDay ?? "pt"}.json`);
+      if (!fs.existsSync(cacheFile)) {
+        const url = `https://router.project-osrm.org/route/v1/driving/${a[0]},${a[1]};${b[0]},${b[1]}?geometries=geojson&overview=full`;
+        const res = await fetch(url).then((r) => r.json());
+        if (res.code !== "Ok") { console.warn(`  ⚠ transfert ${t.fromDay}→${t.toDay} : OSRM ${res.code}`); continue; }
+        fs.writeFileSync(cacheFile, JSON.stringify(res));
+      }
+      geometry = JSON.parse(fs.readFileSync(cacheFile, "utf8")).routes[0].geometry;
+    }
+    geojson.features.push({
+      type: "Feature",
+      properties: { transfer: t.mode ?? "bus", fromDay: t.fromDay ?? null, toDay: t.toDay ?? null },
+      geometry,
+    });
+  }
+
   const totals = {
     distanceKm: +days.reduce((s, d) => s + d.stats.distanceKm, 0).toFixed(1),
     gainM: days.reduce((s, d) => s + d.stats.gainM, 0),
@@ -568,6 +606,8 @@ async function importEdition(dirName) {
       date: d.stats.startTime != null
         ? localDate(Date.parse(d.stats.startTime), tzOffsetHours)
         : null,
+      // Titre manuel éventuel (edition.json "dayTitles") : prime sur le trajet géocodé.
+      title: (meta.dayTitles ?? {})[String(d.n)] ?? undefined,
       photoCount: photoCounts.get(d.n) ?? 0,
       estimated: d.estimated ?? false,
       noTrace: d.noTrace ?? false,

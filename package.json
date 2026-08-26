@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "tours:import": "node scripts/import-tours.mjs",
-    "deploy": "npm run build && npx wrangler pages deploy dist/ --project-name love-tours"
+    "deploy": "npm run build && npx wrangler pages deploy dist/ --project-name love-tours",
+    "tours:geocode": "node scripts/geocode-stages.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

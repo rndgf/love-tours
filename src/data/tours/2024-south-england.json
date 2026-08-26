@@ -659,7 +659,9 @@
    "movingS": 3316,
    "elapsedS": 3431,
    "startTime": "2024-07-22T16:59:13.000Z",
-   "endTime": "2024-07-22T17:56:24.000Z"
+   "endTime": "2024-07-22T17:56:24.000Z",
+   "from": "Caen",
+   "to": "Ouistreham"
   },
   {
    "n": 2,
@@ -675,7 +677,9 @@
    "movingS": 21025,
    "elapsedS": 41908,
    "startTime": "2024-07-23T05:47:36.000Z",
-   "endTime": "2024-07-23T17:26:04.000Z"
+   "endTime": "2024-07-23T17:26:04.000Z",
+   "from": "Portsmouth",
+   "to": "Winchester"
   },
   {
    "n": 3,
@@ -691,7 +695,9 @@
    "movingS": 14133,
    "elapsedS": 30620,
    "startTime": "2024-07-24T09:24:09.000Z",
-   "endTime": "2024-07-24T17:54:29.000Z"
+   "endTime": "2024-07-24T17:54:29.000Z",
+   "from": "Winchester",
+   "to": "Haslemere"
   },
   {
    "n": 4,
@@ -707,7 +713,9 @@
    "movingS": 16916,
    "elapsedS": 31228,
    "startTime": "2024-07-25T08:38:30.000Z",
-   "endTime": "2024-07-25T17:18:58.000Z"
+   "endTime": "2024-07-25T17:18:58.000Z",
+   "from": "Haslemere",
+   "to": "Cuckfield"
   },
   {
    "n": 5,
@@ -723,7 +731,9 @@
    "movingS": 7913,
    "elapsedS": 15968,
    "startTime": "2024-07-26T08:41:06.000Z",
-   "endTime": "2024-07-26T13:07:14.000Z"
+   "endTime": "2024-07-26T13:07:14.000Z",
+   "from": "Cuckfield",
+   "to": "Brighton"
   },
   {
    "n": 6,
@@ -739,7 +749,9 @@
    "movingS": 5374,
    "elapsedS": 10165,
    "startTime": "2024-07-27T12:14:32.000Z",
-   "endTime": "2024-07-27T15:03:57.000Z"
+   "endTime": "2024-07-27T15:03:57.000Z",
+   "from": "Brighton",
+   "to": "Newhaven"
   },
   {
    "n": 7,
@@ -755,7 +767,9 @@
    "movingS": 16408,
    "elapsedS": 22793,
    "startTime": "2024-07-28T07:00:03.000Z",
-   "endTime": "2024-07-28T13:19:56.000Z"
+   "endTime": "2024-07-28T13:19:56.000Z",
+   "from": "Dieppe",
+   "to": "Sotteville-lès-Rouen"
   }
  ]
 }

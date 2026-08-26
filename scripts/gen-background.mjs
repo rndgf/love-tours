@@ -18,13 +18,37 @@ const NE_DIR = process.argv[2] ?? path.join(ROOT, "data/naturalearth");
 
 // Maison : Sotteville-lès-Rouen.
 const HOME = { lon: 1.093, lat: 49.409 };
-// Étendue : ±4.5° de longitude et ±2.8° de latitude autour de la maison
+
+// Centre de la vue : milieu de l'étendue globale des traces (union des bbox
+// des 5 éditions) — le dessin est ainsi visuellement centré, la maison reste
+// dans le champ.
+function tourCenter() {
+  const dir = path.join(ROOT, "public/tours");
+  let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
+  for (const f of fs.readdirSync(dir).filter((f) => f.endsWith(".geojson"))) {
+    const g = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+    for (const feat of g.features ?? []) {
+      const geom = feat.geometry;
+      const lines = geom.type === "MultiLineString" ? geom.coordinates : [geom.coordinates];
+      for (const line of lines) for (const [lon, lat] of line) {
+        if (lon < minLon) minLon = lon;
+        if (lon > maxLon) maxLon = lon;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+      }
+    }
+  }
+  return { lon: (minLon + maxLon) / 2, lat: (minLat + maxLat) / 2 };
+}
+const CENTER = tourCenter();
+
+// Étendue : ±4.5° de longitude et ±2.8° de latitude autour du centre
 // (couvre Loire, Bretagne, Cotentin, Sussex et Zélande).
 const HALF_LON = 4.5, HALF_LAT = 2.8;
-const BBOX = [HOME.lon - HALF_LON, HOME.lat - HALF_LAT, HOME.lon + HALF_LON, HOME.lat + HALF_LAT];
+const BBOX = [CENTER.lon - HALF_LON, CENTER.lat - HALF_LAT, CENTER.lon + HALF_LON, CENTER.lat + HALF_LAT];
 
 const KM_PER_DEG = 111.32;
-const COS0 = Math.cos((HOME.lat * Math.PI) / 180);
+const COS0 = Math.cos((CENTER.lat * Math.PI) / 180);
 const W = 2 * HALF_LON * KM_PER_DEG * COS0;
 const H = 2 * HALF_LAT * KM_PER_DEG;
 const SCALE = 2; // km → unités SVG
@@ -78,6 +102,7 @@ const toPath = (coords, eps) => {
 function extractLines(geojson) {
   const lines = [];
   for (const f of geojson.features) {
+    if (f.properties?.transfer) continue;
     const g = f.geometry;
     if (!g) continue;
     const arrs = g.type === "LineString" ? [g.coordinates]
@@ -102,18 +127,21 @@ const riverPaths = extractLines(rivers)
   .map((run) => toPath(run, 1.2))
   .filter((d) => d.length > 20);
 
-// Traces des Love Tours
-const tourPaths = [];
+// Traces des Love Tours, séparées par mode (vélo → carmin, à pied → sapin)
+const bikePaths = [], hikePaths = [];
 for (const f of fs.readdirSync(path.join(ROOT, "public/tours")).filter((f) => f.endsWith(".geojson"))) {
+  const slug = f.replace(/\.geojson$/, "");
+  const meta = JSON.parse(fs.readFileSync(path.join(ROOT, "src/data/tours", `${slug}.json`), "utf8"));
+  const bucket = meta.mode === "vélo" ? bikePaths : hikePaths;
   const g = JSON.parse(fs.readFileSync(path.join(ROOT, "public/tours", f), "utf8"));
-  for (const l of extractLines(g)) for (const run of clip(l.coords)) tourPaths.push(toPath(run, 2));
+  for (const l of extractLines(g)) for (const run of clip(l.coords)) bucket.push(toPath(run, 2));
 }
 
 const vbW = Math.round(W * SCALE), vbH = Math.round(H * SCALE);
 const hx = px(HOME.lon), hy = py(HOME.lat);
 
 const svg = `<svg class="h-full w-full text-navy" viewBox="0 0 ${vbW} ${vbH}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-  <g fill="none" stroke="currentColor" opacity="0.045">
+  <g fill="none" stroke="currentColor" opacity="0.08">
     <g stroke-width="1.1">
 ${coastPaths.map((d) => `      <path d="${d}" />`).join("\n")}
     </g>
@@ -121,10 +149,13 @@ ${coastPaths.map((d) => `      <path d="${d}" />`).join("\n")}
 ${riverPaths.map((d) => `      <path d="${d}" />`).join("\n")}
     </g>
   </g>
-  <g fill="none" stroke="var(--color-carmin)" stroke-width="2.2" stroke-linecap="round" opacity="0.07">
-${tourPaths.map((d) => `    <path d="${d}" />`).join("\n")}
+  <g fill="none" stroke="var(--color-carmin)" stroke-width="2.2" stroke-linecap="round" opacity="0.12">
+${bikePaths.map((d) => `    <path d="${d}" />`).join("\n")}
   </g>
-  <g opacity="0.12" stroke="var(--color-carmin)" fill="none" stroke-width="1.5">
+  <g fill="none" stroke="var(--color-sapin)" stroke-width="2.2" stroke-linecap="round" opacity="0.12">
+${hikePaths.map((d) => `    <path d="${d}" />`).join("\n")}
+  </g>
+  <g opacity="0.2" stroke="var(--color-carmin)" fill="none" stroke-width="1.5">
     <circle cx="${hx}" cy="${hy}" r="6" />
     <path d="M${hx - 12},${hy} h6 M${+hx + 6},${hy} h6 M${hx},${hy - 12} v6 M${hx},${+hy + 6} v6" />
   </g>
@@ -142,4 +173,4 @@ const out = `---
 ${svg}`;
 fs.writeFileSync(path.join(ROOT, "src/components/BackgroundMap.astro"), out);
 const kb = (svg.length / 1024).toFixed(0);
-console.log(`BackgroundMap.astro : ${coastPaths.length} tronçons de côte, ${riverPaths.length} de fleuve, ${tourPaths.length} traces, ${kb} Ko`);
+console.log(`BackgroundMap.astro : ${coastPaths.length} tronçons de côte, ${riverPaths.length} de fleuve, ${bikePaths.length} traces vélo, ${hikePaths.length} traces à pied, ${kb} Ko`);

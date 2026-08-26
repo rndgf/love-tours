@@ -1,11 +1,11 @@
 {
  "slug": "2023-boucle-dans-le-cotentin",
  "year": 2023,
- "title": "Cotentin Love Tour",
+ "title": "Boucle dans le Cotentin",
  "mode": "à pied",
  "flag": "🇫🇷",
  "country": "Normandie",
- "description": "Une boucle de quatre jours de marche dans le Cotentin au départ de Cherbourg : la Hague, les caps et le bocage normand.",
+ "description": "Notre première randonnée pédestre, une boucle de quatre jours de marche dans le Cotentin au départ de Cherbourg : la Hague, les caps et le bocage normand.",
  "startDate": "2023-07-10",
  "endDate": "2023-07-13",
  "bbox": [
@@ -647,7 +647,9 @@
    "movingS": 12887,
    "elapsedS": 18722,
    "startTime": "2023-07-10T07:25:56.185Z",
-   "endTime": "2023-07-10T12:37:58.185Z"
+   "endTime": "2023-07-10T12:37:58.185Z",
+   "from": "Cherbourg-en-Cotentin",
+   "to": "Gréville-Hague"
   },
   {
    "n": 2,
@@ -663,7 +665,9 @@
    "movingS": 14684,
    "elapsedS": 24526,
    "startTime": "2023-07-11T07:26:37.086Z",
-   "endTime": "2023-07-11T14:15:23.058Z"
+   "endTime": "2023-07-11T14:15:23.058Z",
+   "from": "Gréville-Hague",
+   "to": "Auderville"
   },
   {
    "n": 3,
@@ -679,7 +683,9 @@
    "movingS": 20670,
    "elapsedS": 29735,
    "startTime": "2023-07-12T06:53:53.530Z",
-   "endTime": "2023-07-12T15:09:28.830Z"
+   "endTime": "2023-07-12T15:09:28.830Z",
+   "from": "Auderville",
+   "to": "Sainte-Croix-Hague"
   },
   {
    "n": 4,
@@ -695,7 +701,9 @@
    "movingS": 8709,
    "elapsedS": 9752,
    "startTime": "2023-07-13T07:57:17.941Z",
-   "endTime": "2023-07-13T10:39:50.128Z"
+   "endTime": "2023-07-13T10:39:50.128Z",
+   "from": "Sainte-Croix-Hague",
+   "to": "Cherbourg-en-Cotentin"
   }
  ]
 }

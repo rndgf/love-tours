@@ -10,15 +10,21 @@ export const modeIcon = (mode) => (mode === "vélo" ? "🚴" : "🥾");
 export function formatHours(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.round((seconds % 3600) / 60);
-  return `${h} h ${String(m).padStart(2, "0")}`;
+  return `${h}h${String(m).padStart(2, "0")}`;
 }
 
-const DATE_FMT = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" });
-const DATE_FMT_Y = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+const DATE_FMT = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", timeZone: "UTC" });
+const DATE_FMT_Y = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" });
 
 export function formatRange(start, end) {
   if (!start || !end) return "";
-  return `du ${DATE_FMT.format(new Date(start))} au ${DATE_FMT_Y.format(new Date(end))}`;
+  const s = new Date(start);
+  const e = new Date(end);
+  // Même mois et même année : on ne répète pas le mois (« du 22 au 28 juillet 2024 »)
+  if (s.getUTCFullYear() === e.getUTCFullYear() && s.getUTCMonth() === e.getUTCMonth()) {
+    return `du ${String(s.getUTCDate()).padStart(2, "0")} au ${DATE_FMT_Y.format(e)}`;
+  }
+  return `du ${DATE_FMT.format(s)} au ${DATE_FMT_Y.format(e)}`;
 }
 
 export function formatDay(date) {
