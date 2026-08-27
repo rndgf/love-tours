@@ -6,10 +6,15 @@ Site statique (Astro 7 + Tailwind 4 + MapLibre GL) qui retrace nos itinérances 
 ## Commandes
 
 ```bash
-npm run tours:import   # importe editions/ → données du site (à relancer après tout ajout)
+npm run tours:all      # chaîne complète : import + géocodage + mini-cartes + fond de site
+npm run tours:import   # importe editions/ → données du site, puis géocode les étapes
 npm run dev            # serveur de développement (http://localhost:4321)
 npm run build          # build statique dans dist/
 ```
+
+`tours:import` refuse de supprimer quoi que ce soit si `editions/` est vide ; la purge
+des sorties d'une édition supprimée demande l'option explicite `--prune` :
+`node scripts/import-tours.mjs --prune`.
 
 ## Ajouter une édition
 
@@ -31,7 +36,22 @@ npm run build          # build statique dans dist/
 ```
 
    Sans ce fichier : titre = nom du dossier, mode déduit du `<type>` GPX
-   (`*bike*`/`*bicycle*` → vélo, sinon à pied).
+   (`*bike*`/`*bicycle*` → vélo, sinon à pied). Modes reconnus : `vélo`, `à pied`
+   (`src/lib/mode.js`) — tout autre mode fait échouer l'import.
+
+   **Numérotation des jours** : toutes les clés numériques d'`edition.json`
+   (`statsOverrides`, `dayTitles`, `transfers.fromDay/toDay`) désignent le n° de
+   jour **affiché sur le site**, c'est-à-dire après insertion des `extraDays` et
+   tri chronologique (un prologue devient le jour 1).
+
+   **Transferts** (`transfers`) : `from`/`to` acceptent `[lon, lat]` ou la valeur
+   `"home"` (constante partagée, `scripts/lib/home.mjs`). Les liaisons routées
+   passent par OSRM et sont mises en cache dans `data/transfers/` (clé = slug +
+   coordonnées des extrémités : corriger un point recalcule le tracé).
+
+   Chaque `edition.json` importé est recopié dans `data/editions/<slug>.json`
+   (versionné) : `editions/` est hors dépôt, cette copie est la sauvegarde des
+   métadonnées manuelles.
 
 4. Photos — deux possibilités dans `editions/<édition>/photos/` :
    - **en vrac** : les JPEG sont rattachés au bon jour via leur date EXIF
@@ -40,13 +60,19 @@ npm run build          # build statique dans dist/
 
    Les photos sans jour identifiable partent dans `unsorted/` avec un avertissement.
 
-5. `npm run tours:import` puis vérifier le rendu avec `npm run dev`.
+5. `npm run tours:all` puis vérifier le rendu avec `npm run dev`.
+
+Le géocodage des étapes (« De Vlissingen à Veere ») interroge Nominatim, avec
+cache dans `data/geocode.json` et corrections dans `data/geocode-overrides.json`
+(clé `"lat,lon"` à 3 décimales pour cibler une coordonnée, ou `"Toponyme"` pour
+corriger un nom renvoyé par Nominatim ; les overrides inutilisés sont signalés
+en fin d'exécution).
 
 ## Ce que produit l'import
 
 | Sortie | Contenu |
 |---|---|
-| `src/data/tours/<slug>.json` | méta, stats par jour, bbox, vignette SVG |
+| `src/data/tours/<slug>.json` | méta, stats par jour, bbox, modes de transfert, boucle par jour |
 | `public/tours/<slug>.geojson` | 1 LineString par jour (trace simplifiée RDP 3 m) pour la carte |
 | `src/assets/tours/<slug>/day-N/` | photos, optimisées au build par astro:assets |
 
@@ -60,11 +86,12 @@ API, sans quota. Une couleur par journée (`src/lib/palette.js`).
 ## Cartes en filigrane et mini-cartes
 
 Les données [Natural Earth](https://www.naturalearthdata.com) (domaine public) sont dans
-`data/naturalearth/`. Après ajout d'une édition :
+`data/naturalearth/` (hors dépôt — les scripts affichent comment les retélécharger si
+absentes). Après ajout d'une édition (inclus dans `npm run tours:all`) :
 
 ```bash
-node scripts/gen-minimaps.mjs     # mini-cartes des cartouches (homepage)
-node scripts/gen-background.mjs   # fond de site (côtes + traces, centré maison)
+npm run tours:minimaps     # mini-cartes des cartouches (homepage)
+npm run tours:background   # fond de site (côtes + traces, centré maison)
 ```
 
 ## Déploiement

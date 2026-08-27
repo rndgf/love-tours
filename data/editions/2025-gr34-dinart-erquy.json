@@ -1,0 +1,26 @@
+{
+  "title": "GR34, de Dinard à Erquy",
+  "flag": "🇫🇷",
+  "country": "Bretagne",
+  "description": "Cinq jours de marche sur le GR34, le fameux sentier des douaniers, de Dinard à Erquy : falaises roses, caps et plages de la Côte d'Émeraude.",
+  "tzOffsetHours": 2,
+  "cover": "IMG_20250814_130313",
+  "extraDays": [
+    {
+      "date": "2025-08-16",
+      "name": "Le retour, en bus"
+    }
+  ],
+  "transfers": [
+    {
+      "fromDay": 3,
+      "toDay": 4,
+      "mode": "bus"
+    },
+    {
+      "fromDay": 5,
+      "toDay": 1,
+      "mode": "bus"
+    }
+  ]
+}

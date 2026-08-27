@@ -1,0 +1,27 @@
+{
+  "title": "La Loire à vélo",
+  "flag": "🇫🇷",
+  "country": "France",
+  "description": "Notre premier Love Tour, cadeau de Mélanie pour fêter les 40 ans de Renaud : quatre jours à vélo le long de la Loire, au fil des châteaux et des bords de fleuve.",
+  "tzOffsetHours": 2,
+  "cover": "IMG_20210807_113117",
+  "extraDays": [
+    {
+      "date": "2021-08-06",
+      "name": "La veille du départ"
+    }
+  ],
+  "transfers": [
+    {
+      "fromDay": 5,
+      "to": [
+        0.4059,
+        47.3246
+      ],
+      "mode": "train"
+    }
+  ],
+  "dayTitles": {
+    "5": "Retour à Villandry"
+  }
+}

@@ -21,6 +21,8 @@ const { slug, bbox, days } = Astro.props;
 
 <script>
   import { dayColor } from "../lib/palette.js";
+  import { distM, LOOP_MAX_M } from "../lib/geo.js";
+  import { parseDayHash } from "../lib/dayhash.js";
 
   // MapLibre pèse ~1 Mo : chargé uniquement quand la carte approche du viewport.
   async function initMap(el: HTMLElement) {
@@ -75,11 +77,13 @@ const { slug, bbox, days } = Astro.props;
       });
 
       // Transferts (bus…) entre deux étapes : pointillé neutre + label.
+      // Les doublons de tronçon (`dup`, ex. ferry aller/retour) ne sont
+      // dessinés qu'une fois : sinon opacités cumulées et labels superposés.
       map.addLayer({
         id: "transfer-line",
         type: "line",
         source: "trace",
-        filter: ["has", "transfer"],
+        filter: ["all", ["has", "transfer"], ["!", ["has", "dup"]]],
         layout: { "line-cap": "round" },
         paint: {
           "line-color": "#1e2f4d",
@@ -92,7 +96,7 @@ const { slug, bbox, days } = Astro.props;
         id: "transfer-label",
         type: "symbol",
         source: "trace",
-        filter: ["has", "transfer"],
+        filter: ["all", ["has", "transfer"], ["!", ["has", "dup"]]],
         layout: {
           "symbol-placement": "line-center",
           "text-field": ["upcase", ["get", "transfer"]],
@@ -148,15 +152,10 @@ const { slug, bbox, days } = Astro.props;
       const postTransfer = geojson.features.find(
         (f: any) => f.properties.transfer && f.properties.fromDay === traced.at(-1).properties.day && f.properties.toDay == null,
       );
-      const start = preTransfer ? preTransfer.geometry.coordinates[0] : lineCoords(traced[0])[0];
-      const endCoords = postTransfer ? postTransfer.geometry.coordinates : lineCoords(traced[traced.length - 1]);
+      const start = preTransfer ? lineCoords(preTransfer)[0] : lineCoords(traced[0])[0];
+      const endCoords = postTransfer ? lineCoords(postTransfer) : lineCoords(traced[traced.length - 1]);
       const end = endCoords[endCoords.length - 1];
-      const distM =
-        Math.hypot(
-          (end[0] - start[0]) * 111320 * Math.cos((start[1] * Math.PI) / 180),
-          (end[1] - start[1]) * 111320,
-        );
-      const isLoop = distM < 500;
+      const isLoop = distM(start, end) < LOOP_MAX_M;
       const markers = {
         type: "FeatureCollection",
         features: isLoop
@@ -172,12 +171,8 @@ const { slug, bbox, days } = Astro.props;
       for (let i = 0; i < traced.length - 1; i++) {
         const a = lineCoords(traced[i]).at(-1)!;
         const b = lineCoords(traced[i + 1])[0];
-        const d = Math.hypot(
-          (b[0] - a[0]) * 111320 * Math.cos((a[1] * Math.PI) / 180),
-          (b[1] - a[1]) * 111320,
-        );
         stagePoints.push(a);
-        if (d > 500) stagePoints.push(b);
+        if (distM(a, b) > LOOP_MAX_M) stagePoints.push(b);
       }
       map.addSource("stages", {
         type: "geojson",
@@ -275,9 +270,22 @@ const { slug, bbox, days } = Astro.props;
       document.querySelectorAll<HTMLElement>(`[data-zoom-day][data-zoom-slug="${slug}"]`).forEach((btn) => {
         btn.addEventListener("click", () => applyDay(+btn.dataset.zoomDay!));
       });
-      const initial = /^#j(\d+)$/i.exec(location.hash);
-      if (initial && dayNumbers.includes(+initial[1])) applyDay(+initial[1]);
+      const initial = parseDayHash(location.hash);
+      if (initial != null && dayNumbers.includes(initial)) applyDay(initial);
     });
+
+    // Fond de carte externe (OpenFreeMap) injoignable : message plutôt qu'un
+    // cadre vide. Les erreurs après chargement du style (tuile manquante…)
+    // sont ignorées.
+    map.on("error", () => {
+      if (map.isStyleLoaded() || el.querySelector(".map-error")) return;
+      const msg = document.createElement("div");
+      msg.className =
+        "map-error absolute inset-0 z-10 flex items-center justify-center bg-paper-deep p-6 text-center font-mono text-xs uppercase tracking-widest text-navy";
+      msg.textContent = "Carte indisponible : le fond de carte n'a pas pu être chargé.";
+      el.appendChild(msg);
+    });
+    map.on("load", () => el.querySelector(".map-error")?.remove());
   }
 
   const observer = new IntersectionObserver((entries) => {

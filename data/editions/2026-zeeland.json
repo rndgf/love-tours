@@ -1,0 +1,54 @@
+{
+  "title": "Zeeland Love Tour",
+  "flag": "🇳🇱",
+  "country": "Pays-Bas",
+  "description": "Six jours à vélo entre les polders et les digues de la Zélande : 260 km au ras de l'eau, d'île en île, de Vlissingen aux plages de la mer du Nord.",
+  "tzOffsetHours": 2,
+  "cover": "IMG_0325",
+  "statsOverrides": {
+    "1": {
+      "gainM": 180,
+      "lossM": 190
+    },
+    "2": {
+      "gainM": 320,
+      "lossM": 340
+    },
+    "3": {
+      "gainM": 140,
+      "lossM": 140
+    },
+    "4": {
+      "gainM": 250,
+      "lossM": 260
+    },
+    "5": {
+      "gainM": 190,
+      "lossM": 200
+    },
+    "6": {
+      "gainM": 60,
+      "lossM": 20
+    }
+  },
+  "transfers": [
+    {
+      "mode": "ferry",
+      "from": [
+        3.5686,
+        51.406
+      ],
+      "toDay": 1,
+      "direct": true
+    },
+    {
+      "mode": "ferry",
+      "fromDay": 6,
+      "to": [
+        3.5686,
+        51.406
+      ],
+      "direct": true
+    }
+  ]
+}

@@ -4,7 +4,8 @@ dist/
 
 # Photos personnelles et traces sources : jamais dans git (repo public).
 # Les originaux vivent en local + sauvegarde perso.
-editions/
+# (ancré à la racine : data/editions/ — copie des edition.json — est versionné)
+/editions/
 src/assets/tours/
 
 # Données Natural Earth (28 Mo, retéléchargeables — voir README)

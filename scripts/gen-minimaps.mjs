@@ -11,9 +11,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { distM, LOOP_MAX_M } from "../src/lib/geo.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NE_DIR = process.argv[2] ?? path.join(ROOT, "data/naturalearth");
+
+for (const f of ["land10.geojson", "coast10.geojson"]) {
+  if (!fs.existsSync(path.join(NE_DIR, f))) {
+    console.error(
+      `Données Natural Earth absentes : ${path.join(NE_DIR, f)}\n` +
+      `Télécharger ne_10m_land et ne_10m_coastline sur naturalearthdata.com,\n` +
+      `convertir en GeoJSON (land10.geojson, coast10.geojson) dans ${NE_DIR}/ (dossier hors dépôt).`,
+    );
+    process.exit(1);
+  }
+}
 
 const KM_PER_DEG = 111.32;
 // Marge autour de la trace (fraction du plus grand côté).
@@ -140,9 +152,13 @@ for (const file of fs.readdirSync(path.join(ROOT, "public/tours")).filter((f) =>
   const scaleKm = [100, 50, 20, 10, 5].find((k) => k / kmPerUnit <= 28) ?? 5;
   const scaleUnits = +(scaleKm / kmPerUnit).toFixed(1);
 
+  const startLL = segs[0][0];
+  const endLL = segs.at(-1).at(-1);
   const out = { land: landPaths, coast: coastPaths, trace: tracePaths,
-    start: [ +px(segs[0][0][0]).toFixed(1), +py(segs[0][0][1]).toFixed(1) ],
-    end: [ +px(segs.at(-1).at(-1)[0]).toFixed(1), +py(segs.at(-1).at(-1)[1]).toFixed(1) ],
+    start: [ +px(startLL[0]).toFixed(1), +py(startLL[1]).toFixed(1) ],
+    end: [ +px(endLL[0]).toFixed(1), +py(endLL[1]).toFixed(1) ],
+    // Boucle (départ ≈ arrivée) : le composant affiche alors un marqueur combiné.
+    loop: distM(startLL, endLL) < LOOP_MAX_M,
     scaleKm, scaleUnits };
   fs.writeFileSync(path.join(ROOT, `src/data/minimaps/${slug}.json`), JSON.stringify(out));
   console.log(`✓ ${slug} : ${landPaths.length} terres, ${coastPaths.length} côtes, cadre ${Math.round(sideKm)} km, échelle ${scaleKm} km`);

@@ -11,7 +11,6 @@
   --color-carmin: #b3402f;
   /* Second accent : vert sapin des éditions à pied (le carmin reste au vélo) */
   --color-sapin: #3e6b4f;
-  --color-love: #b3402f;
   --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
   --font-body: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
@@ -29,12 +28,4 @@ body {
 
 ::selection {
   background: color-mix(in srgb, var(--color-carmin) 25%, transparent);
-}
-
-/* Quadrillage atlas : fond des vignettes de trace et des bandeaux */
-.atlas-grid {
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--color-navy) 12%, transparent) 0.5px, transparent 0.5px),
-    linear-gradient(90deg, color-mix(in srgb, var(--color-navy) 12%, transparent) 0.5px, transparent 0.5px);
-  background-size: 28px 28px;
 }

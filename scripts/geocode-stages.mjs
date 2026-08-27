@@ -16,9 +16,14 @@ const GEO_DIR = path.join(ROOT, "public/tours");
 const DATA_DIR = path.join(ROOT, "src/data/tours");
 const CACHE_FILE = path.join(ROOT, "data/geocode.json");
 // Corrections manuelles : Nominatim renvoie parfois le hameau voisin plutôt
-// que la ville (ex. Zanddijk → Veere).
+// que la ville (ex. Zanddijk → Veere). Deux formats de clé acceptés :
+//   "lat,lon" (3 décimales, comme le cache) → override de la coordonnée, prioritaire ;
+//   "Toponyme"                              → override du nom renvoyé par Nominatim.
+// Les overrides jamais utilisés pendant l'exécution sont signalés en fin de
+// run : c'est le symptôme d'une réponse Nominatim qui a changé.
 const OVERRIDES_FILE = path.join(ROOT, "data/geocode-overrides.json");
 const overrides = fs.existsSync(OVERRIDES_FILE) ? JSON.parse(fs.readFileSync(OVERRIDES_FILE, "utf8")) : {};
+const overridesUsed = new Set();
 
 const cache = fs.existsSync(CACHE_FILE) ? JSON.parse(fs.readFileSync(CACHE_FILE, "utf8")) : {};
 const key = ([lon, lat]) => `${lat.toFixed(3)},${lon.toFixed(3)}`;
@@ -37,8 +42,11 @@ async function placeName(coord) {
 }
 
 const finalName = async (coord) => {
+  const k = key(coord);
+  if (overrides[k] !== undefined) { overridesUsed.add(k); return overrides[k]; }
   const n = await placeName(coord);
-  return overrides[n] ?? n;
+  if (n != null && overrides[n] !== undefined) { overridesUsed.add(n); return overrides[n]; }
+  return n;
 };
 
 const lineCoords = (f) =>
@@ -62,4 +70,9 @@ for (const file of fs.readdirSync(GEO_DIR).filter((f) => f.endsWith(".geojson"))
   }
   if (changed) fs.writeFileSync(dataFile, JSON.stringify(tour, null, 1));
   console.log(`✓ ${slug} : ${tour.days.filter((d) => d.from).length} journées géocodées`);
+}
+
+const unused = Object.keys(overrides).filter((k) => !overridesUsed.has(k));
+if (unused.length) {
+  console.warn(`⚠ overrides sans correspondance (réponse Nominatim changée ? coordonnée déplacée ?) : ${unused.join(", ")}`);
 }

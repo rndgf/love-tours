@@ -5,13 +5,13 @@ import DayGallery from "../../components/DayGallery.astro";
 import Lightbox from "../../components/Lightbox.astro";
 import {
   tours,
-  modeIcon,
   formatRange,
   formatDay,
   formatHours,
   stageName,
 } from "../../lib/tours.js";
 import { dayColor } from "../../lib/palette.js";
+import { accentText, accentHover } from "../../lib/mode.js";
 
 export function getStaticPaths() {
   return tours.map((tour, i) => ({
@@ -20,22 +20,23 @@ export function getStaticPaths() {
   }));
 }
 const { tour, older, newer } = Astro.props;
-const accentText = tour.mode === "vélo" ? "text-carmin" : "text-sapin";
+const accent = accentText(tour.mode);
 // Survol des liens de navigation : accent de l'édition CIBLE (carmin vélo, sapin à pied)
-const hoverAccent = (t) => (t?.mode === "vélo" ? "hover:text-carmin" : "hover:text-sapin");
+const hoverAccent = (t) => accentHover(t.mode);
 
 const fmtCoord = (v, pos, neg) => {
   const abs = Math.abs(v);
-  const deg = Math.floor(abs);
-  const min = Math.round((abs - deg) * 60);
+  let deg = Math.floor(abs);
+  // L'arrondi des minutes peut donner 60 (ex. 47.9995°) : reporter sur le degré.
+  let min = Math.round((abs - deg) * 60);
+  if (min === 60) { deg += 1; min = 0; }
   return `${deg}°${String(min).padStart(2, "0")}′${v >= 0 ? pos : neg}`;
 };
 const cornerNW = `${fmtCoord(tour.bbox[3], "N", "S")} · ${fmtCoord(tour.bbox[0], "E", "O")}`;
 
-// Modes de transfert (bus…) présents dans la trace : pilote la légende des pointillés.
-import fs from "node:fs";
-const geo = JSON.parse(fs.readFileSync(`public/tours/${tour.slug}.geojson`, "utf8"));
-const transferModes = [...new Set(geo.features.map((f) => f.properties.transfer).filter(Boolean))];
+// Modes de transfert (bus…) présents : pilote la légende des pointillés.
+// Calculés à l'import (tours:import) et stockés dans le JSON du tour.
+const transferModes = tour.transferModes ?? [];
 ---
 
 <Base
@@ -116,7 +117,7 @@ const transferModes = [...new Set(geo.features.map((f) => f.properties.transfer)
             class={`border-navy/20 px-2 py-3 text-center sm:px-4 sm:py-4
           ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""}`}
           >
-            <dd class={`font-mono text-xl font-medium ${accentText} sm:text-2xl`}>
+            <dd class={`font-mono text-xl font-medium ${accent} sm:text-2xl`}>
               {value}
             </dd>
             <dt class="font-mono mt-0.5 text-[10px] uppercase tracking-[0.18em] text-navy">
@@ -209,9 +210,9 @@ const transferModes = [...new Set(geo.features.map((f) => f.properties.transfer)
                 {day.title
                   ? day.title
                   : day.from && day.to
-                    ? day.from === day.to
+                    ? day.loop
                       ? `Boucle depuis ${day.from}`
-                      : `${/^[aeiouyàâéèêëîïôùûh]/i.test(day.from) ? "D'" : "De "}${day.from} à ${day.to}`
+                      : `De ${day.from} à ${day.to}`
                     : stageName(day.name, tour.title) || formatDay(day.date)}
                   </h2>
                 </div>
@@ -324,43 +325,63 @@ const transferModes = [...new Set(geo.features.map((f) => f.properties.transfer)
     style="display:none">↑</button
   >
 
-  <script define:vars={{ dayStats: tour.days.filter((d) => !d.noTrace).map((d) => ({ n: d.n, distanceKm: d.distanceKm, gainM: d.gainM, movingS: d.movingS, elapsedS: d.elapsedS, color: dayColor(d.n) })), totals: tour.totals }}>
+  <script
+    type="application/json"
+    id="day-stats-data"
+    is:inline
+    set:html={JSON.stringify({
+      days: tour.days
+        .filter((d) => !d.noTrace)
+        .map((d) => ({ n: d.n, distanceKm: d.distanceKm, gainM: d.gainM, movingS: d.movingS, elapsedS: d.elapsedS, color: dayColor(d.n) })),
+      totals: tour.totals,
+    })}
+  />
+  <script>
+    import { formatHours } from "../../lib/tours.js";
+    import { parseDayHash, dayHash } from "../../lib/dayhash.js";
+
     // Clic sur une puce de jour : stats du cartouche (teintées à la couleur du
     // jour), état actif du bouton, et hash #jN pour survivre au rechargement.
-    const fh = (sec) => `${Math.floor(sec / 3600)}h${String(Math.round((sec % 3600) / 60)).padStart(2, "0")}`;
+    const { days: dayStats, totals } = JSON.parse(
+      document.getElementById("day-stats-data")!.textContent!,
+    );
     const cells = document.querySelectorAll("#edition-stats > div");
-    const setStats = (rows, color) =>
+    const setStats = (rows: [string | number, string][], color?: string) =>
       rows.forEach(([value, label], i) => {
-        const dd = cells[i].querySelector("dd");
-        dd.textContent = value;
+        const dd = cells[i].querySelector("dd")!;
+        dd.textContent = String(value);
         dd.style.color = color ?? "";
-        cells[i].querySelector("dt").textContent = label;
+        cells[i].querySelector("dt")!.textContent = label;
       });
-    const buttons = [...document.querySelectorAll("[data-zoom-day]")];
-    const selectDay = (n, scroll = true) => {
-      buttons.forEach((b) => b.classList.toggle("border-navy", +b.dataset.zoomDay === n));
-      buttons.forEach((b) => b.classList.toggle("bg-paper-deep", +b.dataset.zoomDay === n));
-      const d = dayStats.find((x) => x.n === n);
+    const buttons = [...document.querySelectorAll<HTMLElement>("[data-zoom-day]")];
+    const selectDay = (n: number, scroll = true) => {
+      buttons.forEach((b) => b.classList.toggle("border-navy", +b.dataset.zoomDay! === n));
+      buttons.forEach((b) => b.classList.toggle("bg-paper-deep", +b.dataset.zoomDay! === n));
+      const d = dayStats.find((x: any) => x.n === n);
       setStats(
         d
-          ? [[d.distanceKm, "km"], [d.gainM, "m dénivelé +"], [fh(d.movingS), "en mouvement"], [fh(d.elapsedS), "au total"]]
-          : [[totals.distanceKm, "km"], [totals.days, "jours"], [totals.gainM, "m dénivelé +"], [fh(totals.movingS), "en mouvement"]],
+          ? [[d.distanceKm, "km"], [d.gainM, "m dénivelé +"], [formatHours(d.movingS), "en mouvement"], [formatHours(d.elapsedS), "au total"]]
+          : [[totals.distanceKm, "km"], [totals.days, "jours"], [totals.gainM, "m dénivelé +"], [formatHours(totals.movingS), "en mouvement"]],
         d?.color,
       );
-      history.replaceState(null, "", n > 0 ? `#j${n}` : location.pathname);
+      history.replaceState(null, "", n > 0 ? dayHash(n) : location.pathname + location.search);
       // Si le cartouche n'est pas visible (clic depuis la carte, plus bas),
       // remonter en douceur jusqu'à lui.
-      const r = document.getElementById("edition-stats").getBoundingClientRect();
+      const stats = document.getElementById("edition-stats")!;
+      const r = stats.getBoundingClientRect();
       if (scroll && (r.top < 0 || r.bottom > innerHeight)) {
-        document.getElementById("edition-stats").scrollIntoView({ behavior: "smooth", block: "start" });
+        stats.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     };
-    buttons.forEach((btn) => btn.addEventListener("click", () => selectDay(+btn.dataset.zoomDay)));
-    const m = /^#j(\d+)$/i.exec(location.hash);
-    if (m && dayStats.some((d) => d.n === +m[1])) selectDay(+m[1], false);
-    // ESC : retour à la vue complète (carte, stats, hash).
+    buttons.forEach((btn) => btn.addEventListener("click", () => selectDay(+btn.dataset.zoomDay!)));
+    const initial = parseDayHash(location.hash);
+    if (initial != null && dayStats.some((d: any) => d.n === initial)) selectDay(initial, false);
+    // ESC : retour à la vue complète (carte, stats, hash) — sauf si une boîte
+    // de dialogue (lightbox) est ouverte : son ESC natif la ferme, sans plus.
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") document.querySelector('[data-zoom-day="0"]')?.click();
+      if (e.key !== "Escape") return;
+      if (document.querySelector("dialog[open]")) return;
+      document.querySelector<HTMLElement>('[data-zoom-day="0"]')?.click();
     });
   </script>
 

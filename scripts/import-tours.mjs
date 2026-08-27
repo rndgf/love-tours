@@ -19,6 +19,9 @@ import { spawnSync } from "node:child_process";
 import sharp from "sharp";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { MODES } from "../src/lib/mode.js";
+import { distM, LOOP_MAX_M } from "../src/lib/geo.js";
+import { HOME } from "./lib/home.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const EDITIONS_DIR = path.join(ROOT, "editions");
@@ -340,22 +343,6 @@ async function importPhotos(editionDir, slug, days, tzOffsetHours) {
   return counts;
 }
 
-/** Vignette SVG : coordonnées normalisées 0-1 (y inversé), ~150 points. */
-function thumbCoords(allPoints, bbox) {
-  const [minLon, minLat, maxLon, maxLat] = bbox;
-  const lat0 = rad((minLat + maxLat) / 2);
-  const w = (maxLon - minLon) * Math.cos(lat0) || 1e-9;
-  const h = maxLat - minLat || 1e-9;
-  const scale = Math.max(w, h);
-  const step = Math.max(1, Math.floor(allPoints.length / 150));
-  const pts = allPoints.filter((_, i) => i % step === 0);
-  if (pts.at(-1) !== allPoints.at(-1)) pts.push(allPoints.at(-1));
-  return pts.map((p) => [
-    +(((p.lon - minLon) * Math.cos(lat0)) / scale + (1 - w / scale) / 2).toFixed(4),
-    +((maxLat - p.lat) / scale + (1 - h / scale) / 2).toFixed(4),
-  ]);
-}
-
 async function importEdition(dirName) {
   const m = dirName.match(/^(\d{4})_(.+)$/);
   if (!m) { console.warn(`ignoré (nom hors convention ANNÉE_Nom) : ${dirName}`); return null; }
@@ -384,6 +371,9 @@ async function importEdition(dirName) {
     });
 
   const mode = meta.mode ?? (/bike|bicycle|velo|vélo|cycling/i.test(tracks[0].type) ? "vélo" : "à pied");
+  if (!MODES.includes(mode)) {
+    throw new Error(`${dirName} : mode "${mode}" inconnu (attendus : ${MODES.join(", ")})`);
+  }
 
   // 1 fichier → N séries (une par date locale), puis tri chronologique global.
   const sortKey = (r) => r.points[0].t
@@ -485,14 +475,6 @@ async function importEdition(dirName) {
     console.warn(`    jour ${d.n} estimé : ${d.stats.distanceKm} km → ${Math.round(movingS / 36) / 100} h en mouvement`);
   }
 
-  // Valeurs officielles (edition.json → statsOverrides, clé = n° de jour) :
-  // prioritaires sur le calcul. Utile quand l'export GPX ne contient pas les
-  // données de l'appli (ex. D+ komoot calculé sur des altitudes non exportées).
-  for (const d of days) {
-    const o = (meta.statsOverrides ?? {})[String(d.n)];
-    if (o) d.stats = { ...d.stats, ...o };
-  }
-
   // Jours épilogue/prologue (edition.json → extraDays) : pas de trace GPS,
   // photos seulement — ex. journée de retour en bus. Rattachement par date locale.
   for (const x of meta.extraDays ?? []) {
@@ -520,6 +502,15 @@ async function importEdition(dirName) {
     d.label = d.noTrace ? "✦" : `J${++traceIdx}`;
   });
 
+  // Valeurs officielles (edition.json → statsOverrides) : prioritaires sur le
+  // calcul (ex. D+ komoot calculé sur des altitudes non exportées). Appliquées
+  // APRÈS le tri : les clés d'edition.json (statsOverrides, dayTitles,
+  // transfers) désignent toutes le même n° de jour, celui affiché sur le site.
+  for (const d of days) {
+    const o = (meta.statsOverrides ?? {})[String(d.n)];
+    if (o) d.stats = { ...d.stats, ...o };
+  }
+
   const all = days.flatMap((d) => d.segments.flat());
   const bbox = [
     Math.min(...all.map((p) => p.lon)), Math.min(...all.map((p) => p.lat)),
@@ -546,17 +537,20 @@ async function importEdition(dirName) {
   // routier réel via OSRM, mis en cache dans data/transfers/ (versionné) pour
   // ne pas dépendre du réseau aux imports suivants.
   for (const t of meta.transfers ?? []) {
-    // Extrémités : point explicite [lon,lat] (t.from / t.to), sinon fin du
-    // jour t.fromDay / début du jour t.toDay.
+    // Extrémités : point explicite [lon,lat] ou "home" (t.from / t.to), sinon
+    // fin du jour t.fromDay / début du jour t.toDay.
+    const resolvePoint = (p) => (p === "home" ? HOME : p);
     const dayPoint = (n, last) => {
       const d = days.find((x) => x.n === n);
       if (!d?.segments.length) return null;
       const pt = last ? d.segments.at(-1).at(-1) : d.segments[0][0];
       return [pt.lon, pt.lat];
     };
-    const a = t.from ?? (t.fromDay != null ? dayPoint(t.fromDay, true) : null);
-    const b = t.to ?? (t.toDay != null ? dayPoint(t.toDay, false) : null);
-    if (!a || !b) continue;
+    const a = resolvePoint(t.from) ?? (t.fromDay != null ? dayPoint(t.fromDay, true) : null);
+    const b = resolvePoint(t.to) ?? (t.toDay != null ? dayPoint(t.toDay, false) : null);
+    if (!a || !b) {
+      throw new Error(`${slug} : transfert ${t.fromDay ?? "?"}→${t.toDay ?? "?"} sans extrémité résoluble`);
+    }
     let geometry;
     if (t.direct) {
       // Liaison directe (ferry…) : segment sur l'eau, pas de routage routier.
@@ -564,20 +558,58 @@ async function importEdition(dirName) {
     } else {
       const cacheDir = path.join(ROOT, "data/transfers");
       fs.mkdirSync(cacheDir, { recursive: true });
-      const cacheFile = path.join(cacheDir, `${slug}-${t.fromDay ?? "pt"}-${t.toDay ?? "pt"}.json`);
+      // Clé de cache = coordonnées des extrémités : corriger un point dans
+      // edition.json invalide le cache ; renuméroter les jours ne l'invalide pas.
+      const ckey = (c) => `${c[0].toFixed(4)},${c[1].toFixed(4)}`;
+      const cacheFile = path.join(cacheDir, `${slug}_${ckey(a)}_${ckey(b)}.json`);
+      // Anciens caches nommés <slug>-<fromDay>-<toDay>.json (réponse OSRM
+      // complète) : migrés en place, seule la géométrie est conservée.
+      const legacy = path.join(cacheDir, `${slug}-${t.fromDay ?? "pt"}-${t.toDay ?? "pt"}.json`);
+      if (!fs.existsSync(cacheFile) && fs.existsSync(legacy)) {
+        const old = JSON.parse(fs.readFileSync(legacy, "utf8"));
+        fs.writeFileSync(cacheFile, JSON.stringify({ geometry: old.routes?.[0]?.geometry ?? old.geometry }));
+        fs.rmSync(legacy);
+        console.warn(`    cache transfert migré : ${path.basename(legacy)} → ${path.basename(cacheFile)}`);
+      }
       if (!fs.existsSync(cacheFile)) {
         const url = `https://router.project-osrm.org/route/v1/driving/${a[0]},${a[1]};${b[0]},${b[1]}?geometries=geojson&overview=full`;
-        const res = await fetch(url).then((r) => r.json());
-        if (res.code !== "Ok") { console.warn(`  ⚠ transfert ${t.fromDay}→${t.toDay} : OSRM ${res.code}`); continue; }
-        fs.writeFileSync(cacheFile, JSON.stringify(res));
+        let res;
+        try {
+          res = await fetch(url).then((r) => r.json());
+        } catch (err) {
+          throw new Error(`${slug} : transfert ${t.fromDay ?? "?"}→${t.toDay ?? "?"} : OSRM injoignable (${err.message})`);
+        }
+        if (res.code !== "Ok") {
+          throw new Error(`${slug} : transfert ${t.fromDay ?? "?"}→${t.toDay ?? "?"} : OSRM ${res.code}`);
+        }
+        fs.writeFileSync(cacheFile, JSON.stringify({ geometry: res.routes[0].geometry }));
       }
-      geometry = JSON.parse(fs.readFileSync(cacheFile, "utf8")).routes[0].geometry;
+      geometry = JSON.parse(fs.readFileSync(cacheFile, "utf8")).geometry;
     }
     geojson.features.push({
       type: "Feature",
       properties: { transfer: t.mode ?? "bus", fromDay: t.fromDay ?? null, toDay: t.toDay ?? null },
       geometry,
     });
+  }
+
+  // Deux transferts sur le même tronçon (ex. ferry aller/retour 2026) : le
+  // doublon est marqué `dup` — la carte ne dessine la ligne et le label
+  // qu'une fois (sinon : opacités cumulées et deux labels superposés).
+  {
+    const transfers = geojson.features.filter((f) => f.properties.transfer);
+    const ends = (f) => [f.geometry.coordinates[0], f.geometry.coordinates.at(-1)];
+    const near = (p, q) => distM(p, q) < 150;
+    const kept = [];
+    for (const f of transfers) {
+      const [a1, b1] = ends(f);
+      const dupOf = kept.find((g) => {
+        const [a2, b2] = ends(g);
+        return (near(a1, a2) && near(b1, b2)) || (near(a1, b2) && near(b1, a2));
+      });
+      if (dupOf) f.properties.dup = true;
+      else kept.push(f);
+    }
   }
 
   const totals = {
@@ -600,20 +632,28 @@ async function importEdition(dirName) {
     bbox,
     cover: meta.cover ?? "",
     totals: { ...totals, photos: [...photoCounts.entries()].filter(([k]) => k > 0).reduce((s, [, v]) => s + v, 0) },
-    thumb: thumbCoords(all, bbox),
-    days: days.map((d) => ({
-      n: d.n, name: d.name,
-      date: d.stats.startTime != null
-        ? localDate(Date.parse(d.stats.startTime), tzOffsetHours)
-        : null,
-      // Titre manuel éventuel (edition.json "dayTitles") : prime sur le trajet géocodé.
-      title: (meta.dayTitles ?? {})[String(d.n)] ?? undefined,
-      photoCount: photoCounts.get(d.n) ?? 0,
-      estimated: d.estimated ?? false,
-      noTrace: d.noTrace ?? false,
-      label: d.label,
-      ...d.stats,
-    })),
+    // Modes de transfert présents (bus, ferry…) : pilote la légende des
+    // pointillés sur la page détail, sans relire le geojson au build.
+    transferModes: [...new Set(geojson.features.map((f) => f.properties.transfer).filter(Boolean))],
+    days: days.map((d) => {
+      const first = d.segments[0]?.[0];
+      const last = d.segments.at(-1)?.at(-1);
+      return {
+        n: d.n, name: d.name,
+        date: d.stats.startTime != null
+          ? localDate(Date.parse(d.stats.startTime), tzOffsetHours)
+          : null,
+        // Titre manuel éventuel (edition.json "dayTitles") : prime sur le trajet géocodé.
+        title: (meta.dayTitles ?? {})[String(d.n)] ?? undefined,
+        // Boucle géométrique (départ ≈ arrivée) : même définition que la carte.
+        loop: first != null && distM([first.lon, first.lat], [last.lon, last.lat]) < LOOP_MAX_M,
+        photoCount: photoCounts.get(d.n) ?? 0,
+        estimated: d.estimated ?? false,
+        noTrace: d.noTrace ?? false,
+        label: d.label,
+        ...d.stats,
+      };
+    }),
   };
 
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -621,13 +661,24 @@ async function importEdition(dirName) {
   fs.writeFileSync(path.join(DATA_DIR, `${slug}.json`), JSON.stringify(tour, null, 1));
   fs.writeFileSync(path.join(GEO_DIR, `${slug}.geojson`), JSON.stringify(geojson));
 
+  // Sauvegarde versionnée des métadonnées manuelles : editions/ est hors dépôt
+  // (photos, GPX), mais les edition.json sont la seule source des transferts,
+  // dayTitles, statsOverrides… → copie dans data/editions/ (committée).
+  if (fs.existsSync(metaFile)) {
+    const backupDir = path.join(ROOT, "data/editions");
+    fs.mkdirSync(backupDir, { recursive: true });
+    fs.copyFileSync(metaFile, path.join(backupDir, `${slug}.json`));
+  }
+
   const nPhotos = [...photoCounts.values()].reduce((a, b) => a + b, 0);
   const multi = days.filter((d) => d.segments.length > 1).length;
   console.log(`✓ ${slug} : ${days.length} jours${multi ? ` (${multi} multi-segments)` : ""}, ${totals.distanceKm} km, ${all.length} pts (simplifiés), ${nPhotos} photos`);
   return slug;
 }
 
-// Purge les sorties d'éditions supprimées, puis importe tout.
+// Importe tout, puis purge les sorties orphelines — uniquement sur demande
+// explicite (--prune) : sur un clone sans editions/, une purge implicite
+// effacerait toutes les données versionnées.
 fs.mkdirSync(EDITIONS_DIR, { recursive: true });
 const slugs = [];
 for (const e of fs.readdirSync(EDITIONS_DIR, { withFileTypes: true })) {
@@ -635,11 +686,22 @@ for (const e of fs.readdirSync(EDITIONS_DIR, { withFileTypes: true })) {
   const slug = await importEdition(e.name);
   if (slug) slugs.push(slug);
 }
-for (const dir of [DATA_DIR, GEO_DIR]) {
+if (!slugs.length) {
+  console.error("Aucune édition importée : editions/ est absent ou vide. Rien n'est supprimé.");
+  process.exit(1);
+}
+const prune = process.argv.includes("--prune");
+for (const dir of [DATA_DIR, GEO_DIR, path.join(ROOT, "src/data/minimaps")]) {
   if (!fs.existsSync(dir)) continue;
   for (const f of fs.readdirSync(dir)) {
     const s = f.replace(/\.(json|geojson)$/, "");
-    if (!slugs.includes(s)) fs.rmSync(path.join(dir, f));
+    if (slugs.includes(s)) continue;
+    if (prune) {
+      fs.rmSync(path.join(dir, f));
+      console.warn(`  supprimé (édition disparue) : ${path.relative(ROOT, path.join(dir, f))}`);
+    } else {
+      console.warn(`  ⚠ orphelin (édition absente de editions/) : ${path.relative(ROOT, path.join(dir, f))} — relancer avec --prune pour supprimer`);
+    }
   }
 }
 console.log(`${slugs.length} édition(s) importée(s).`);

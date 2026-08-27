@@ -7,9 +7,12 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "tours:import": "node scripts/import-tours.mjs",
-    "deploy": "npm run build && npx wrangler pages deploy dist/ --project-name love-tours",
-    "tours:geocode": "node scripts/geocode-stages.mjs"
+    "tours:import": "node scripts/import-tours.mjs && node scripts/geocode-stages.mjs",
+    "tours:geocode": "node scripts/geocode-stages.mjs",
+    "tours:minimaps": "node scripts/gen-minimaps.mjs",
+    "tours:background": "node scripts/gen-background.mjs",
+    "tours:all": "npm run tours:import && npm run tours:minimaps && npm run tours:background",
+    "deploy": "npm run build && npx wrangler pages deploy dist/ --project-name love-tours"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

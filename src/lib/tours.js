@@ -5,11 +5,11 @@ export const tours = Object.values(modules)
   .map((m) => m.default)
   .sort((a, b) => b.year - a.year || b.startDate?.localeCompare(a.startDate ?? "") || 0);
 
-export const modeIcon = (mode) => (mode === "vélo" ? "🚴" : "🥾");
-
 export function formatHours(seconds) {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.round((seconds % 3600) / 60);
+  let h = Math.floor(seconds / 3600);
+  let m = Math.round((seconds % 3600) / 60);
+  // L'arrondi des minutes peut donner 60 (ex. 3599 s) : reporter sur l'heure.
+  if (m === 60) { h += 1; m = 0; }
   return `${h}h${String(m).padStart(2, "0")}`;
 }
 

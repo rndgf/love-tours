@@ -12,12 +12,25 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isBike } from "../src/lib/mode.js";
+import { HOME as HOME_COORD } from "./lib/home.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NE_DIR = process.argv[2] ?? path.join(ROOT, "data/naturalearth");
 
-// Maison : Sotteville-lès-Rouen.
-const HOME = { lon: 1.093, lat: 49.409 };
+for (const f of ["coast10.geojson", "rivers10.geojson"]) {
+  if (!fs.existsSync(path.join(NE_DIR, f))) {
+    console.error(
+      `Données Natural Earth absentes : ${path.join(NE_DIR, f)}\n` +
+      `Télécharger ne_10m_coastline et ne_10m_rivers_lake_centerlines sur naturalearthdata.com,\n` +
+      `convertir en GeoJSON (coast10.geojson, rivers10.geojson) dans ${NE_DIR}/ (dossier hors dépôt).`,
+    );
+    process.exit(1);
+  }
+}
+
+// Maison : Sotteville-lès-Rouen (constante partagée avec les edition.json via "home").
+const HOME = { lon: HOME_COORD[0], lat: HOME_COORD[1] };
 
 // Centre de la vue : milieu de l'étendue globale des traces (union des bbox
 // des 5 éditions) — le dessin est ainsi visuellement centré, la maison reste
@@ -132,7 +145,7 @@ const bikePaths = [], hikePaths = [];
 for (const f of fs.readdirSync(path.join(ROOT, "public/tours")).filter((f) => f.endsWith(".geojson"))) {
   const slug = f.replace(/\.geojson$/, "");
   const meta = JSON.parse(fs.readFileSync(path.join(ROOT, "src/data/tours", `${slug}.json`), "utf8"));
-  const bucket = meta.mode === "vélo" ? bikePaths : hikePaths;
+  const bucket = isBike(meta.mode) ? bikePaths : hikePaths;
   const g = JSON.parse(fs.readFileSync(path.join(ROOT, "public/tours", f), "utf8"));
   for (const l of extractLines(g)) for (const run of clip(l.coords)) bucket.push(toPath(run, 2));
 }

@@ -1,0 +1,57 @@
+{
+  "title": "British Love Tour",
+  "flag": "🇬🇧",
+  "country": "Angleterre",
+  "description": "Sept jours à vélo de Caen à Dieppe par le sud de l'Angleterre : traversée en ferry, Portsmouth, Winchester, les South Downs puis Brighton avant le retour par Newhaven.",
+  "tzOffsetHours": 1,
+  "cover": "original_e4f2ac22-27de-438a-ac50-c5a9463dfbfc_IMG_20240727_124243",
+  "statsOverrides": {
+    "1": {
+      "gainM": 50,
+      "lossM": 40
+    },
+    "2": {
+      "gainM": 470,
+      "lossM": 470
+    },
+    "3": {
+      "gainM": 540,
+      "lossM": 480
+    },
+    "4": {
+      "gainM": 640,
+      "lossM": 660
+    },
+    "5": {
+      "gainM": 210,
+      "lossM": 340
+    },
+    "6": {
+      "gainM": 140,
+      "lossM": 120
+    },
+    "7": {
+      "gainM": 390,
+      "lossM": 440
+    }
+  },
+  "transfers": [
+    {
+      "mode": "train",
+      "from": "home",
+      "toDay": 1
+    },
+    {
+      "fromDay": 1,
+      "toDay": 2,
+      "mode": "ferry",
+      "direct": true
+    },
+    {
+      "fromDay": 6,
+      "toDay": 7,
+      "mode": "ferry",
+      "direct": true
+    }
+  ]
+}

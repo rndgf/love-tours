@@ -1,0 +1,14 @@
+{
+  "title": "Boucle dans le Cotentin",
+  "flag": "🇫🇷",
+  "country": "Normandie",
+  "description": "Notre première randonnée pédestre, une boucle de quatre jours de marche dans le Cotentin au départ de Cherbourg : la Hague, les caps et le bocage normand.",
+  "tzOffsetHours": 2,
+  "plannedDays": [
+    {
+      "match": "Jour 1",
+      "date": "2023-07-10"
+    }
+  ],
+  "cover": "IMG_20230714_131235"
+}

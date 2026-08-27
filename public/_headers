@@ -1,0 +1,5 @@
+# Cloudflare Pages : en-têtes servis avec chaque ressource.
+# Le meta noindex ne couvre que le HTML ; cet en-tête couvre tout,
+# y compris les photos (/_astro/*.webp) — site privé, jamais indexé.
+/*
+  X-Robots-Tag: noindex, nofollow
