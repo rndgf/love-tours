@@ -48,41 +48,6 @@ const transferModes = tour.transferModes ?? [];
 >
   <!-- En-tête -->
   <section class="mx-auto max-w-6xl px-4 pb-8 pt-8 sm:px-6 sm:pb-10 sm:pt-14">
-    <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-      <a
-        href="/"
-        class="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-soft transition hover:text-laiton"
-        >← tous les Love Tours</a
-      >
-      <div class="font-mono flex gap-4 text-[10px] uppercase tracking-[0.15em]">
-        {
-          older ? (
-            <a
-              href={`/tours/${older.slug}/`}
-              class={`text-ink-soft transition ${hoverAccent(older)}`}
-              title={older.title}
-            >
-              ← {older.year}
-            </a>
-          ) : (
-            <span class="cursor-default select-none text-navy/25" aria-hidden="true">←</span>
-          )
-        }
-        {
-          newer ? (
-            <a
-              href={`/tours/${newer.slug}/`}
-              class={`text-ink-soft transition ${hoverAccent(newer)}`}
-              title={newer.title}
-            >
-              {newer.year} →
-            </a>
-          ) : (
-            <span class="cursor-default select-none text-navy/25" aria-hidden="true">→</span>
-          )
-        }
-      </div>
-    </div>
     <div class="relative">
       <span
         aria-hidden="true"
@@ -90,7 +55,7 @@ const transferModes = tour.transferModes ?? [];
         >{tour.year}</span
       >
       <p
-        class="font-mono mt-7 text-[10px] font-medium uppercase tracking-[0.2em] text-navy"
+        class="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-navy"
       >
         {tour.mode}{tour.country && ` · ${tour.country}`}
       </p>

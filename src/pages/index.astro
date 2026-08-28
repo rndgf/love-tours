@@ -76,14 +76,16 @@ const riderHike = moveIcon("à pied");
     aria-label="Aller à une année"
     class="font-mono sticky top-0 z-20 mt-10 border-b-2 border-navy bg-paper/95 backdrop-blur-sm sm:hidden"
   >
-    <div class="mx-auto flex max-w-6xl flex-wrap justify-center gap-x-1 gap-y-1 px-4 py-2.5 sm:px-6">
+    <!-- Une seule ligne : défilement horizontal (barre masquée), liens
+         centrés tant que ça tient (marges auto aux extrémités). -->
+    <div class="yn-scroll mx-auto flex max-w-6xl gap-x-1 overflow-x-auto px-4 py-2.5 sm:px-6">
       {
         tours.map((tour) => (
           <a
             href={`#y${tour.year}`}
             data-year={tour.year}
             style={`--accent: ${accentVar(tour.mode)}`}
-            class="yn-link px-3 py-1 text-[12px] tracking-[0.12em] text-navy transition hover:bg-navy hover:text-paper"
+            class="yn-link shrink-0 px-3 py-1 text-[12px] tracking-[0.12em] text-navy transition first:ml-auto last:mr-auto hover:bg-navy hover:text-paper"
           >
             {tour.year}
           </a>
@@ -318,6 +320,7 @@ const riderHike = moveIcon("à pied");
     const links = nav ? [...nav.querySelectorAll<HTMLElement>(".yn-link")] : [];
     const ynLerp = ynRider ? mkLerp((v) => (ynRider.style.left = `${v}px`)) : null;
     const X_PAD = 20; // le voyageur mobile ne colle pas aux bords de la nav
+    let lastActive: HTMLElement | null = null;
 
     const update = () => {
       const rect = ol.getBoundingClientRect();
@@ -340,6 +343,16 @@ const riderHike = moveIcon("à pied");
         links.forEach((l) =>
           l.classList.toggle("is-active", !!cur && l.dataset.year === cur.id.slice(1))
         );
+        // Rangée défilante : recentre l'année active quand elle change.
+        const active = cur ? links.find((l) => l.dataset.year === cur.id.slice(1)) : null;
+        if (active && active !== lastActive) {
+          lastActive = active;
+          const sc = active.parentElement!;
+          sc.scrollTo({
+            left: active.offsetLeft - (sc.clientWidth - active.offsetWidth) / 2,
+            behavior: "smooth",
+          });
+        }
         ynRider.style.visibility = cur ? "visible" : "hidden";
         if (cur) {
           const p = clamp((center - rect.top) / rect.height, 0, 1);

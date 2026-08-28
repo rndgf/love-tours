@@ -52,6 +52,15 @@ body {
   background: var(--accent);
   color: var(--color-paper);
 }
+/* Rangée d'années défilante : barre de scroll masquée (l'année active est
+   recentrée par script, la bordure basse + voyageur suffisent comme repère). */
+.yn-scroll {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.yn-scroll::-webkit-scrollbar {
+  display: none;
+}
 
 /* Timeline de la homepage : au survol d'une carte, son année et le point du
    fil prennent l'accent du mode (--accent posée sur le <li> : carmin vélo,

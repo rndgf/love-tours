@@ -89,8 +89,11 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
    `voyages` (compte), `km à vélo` et `km à pied` (sommes par mode,
    séparées exprès — ne jamais fusionner), `jours dehors` (desktop
    seulement), `de dénivelé +`. Mobile : 4 cellules en 2×2.
-3. **Nav des années** (mobile uniquement, sticky en haut) : liens `#y<année>`,
-   année active mise en évidence au scroll, voyageur miniature (voir §5.3).
+3. **Nav des années** (mobile uniquement, sticky en haut) : liens `#y<année>`
+   sur **une seule ligne à défilement horizontal** (barre masquée, liens
+   centrés tant que ça tient, année active recentrée automatiquement au
+   scroll de page), année active mise en évidence, voyageur miniature
+   (voir §5.3). Tient sans dégradation à 13 éditions et plus.
 4. **Timeline des éditions** : une carte par édition, ordre antichronologique.
    Desktop ≥ 1400 px : fil vertical pointillé à gauche avec flèche en tête
    (le voyage continue), année + point par carte, voyageur qui suit le
@@ -102,10 +105,10 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 
 ### 4.2 Page détail `/tours/<slug>/`
 
-1. **En-tête** : lien retour « ← tous les Love Tours », liens précédent/
-   suivant (années ; flèche grisée `navy/25` si absent — toujours afficher
-   les deux pour la stabilité de l'UI), année en filigrane géant, kicker
-   `mode · pays`, H1 `drapeau + titre`, dates, description.
+1. **En-tête** : année en filigrane géant, kicker `mode · pays`, H1
+   `drapeau + titre`, dates, description. Pas de fil d'Ariane (supprimé :
+   le logo du header ramène à l'accueil, les flèches d'édition vivent en
+   bas de page — toujours affichées, grisées `navy/25` si absentes).
 2. **Cartouche de stats** (`#edition-stats`) : 4 cellules — totaux édition
    (`km / jours / m dénivelé + / effort`) ou stats du jour sélectionné
    (`km / m dénivelé + / effort / au total`, valeurs teintées à la couleur

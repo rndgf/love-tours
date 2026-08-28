@@ -211,8 +211,8 @@ neutralise tout (cf. AGENT-SITE.md §6).
   **centré optiquement sur le wordmark** (bloc décalé de −29 px = demi
   picto+gap ; le picto déborde à gauche).
 - Footer : `bg-paper/80`, médaillon à cheval sur la bordure ondulée,
-  contenu centré `pt-14 pb-10`, phrase (`text-sm ink-soft`) « Un été à
-  vélo, l'autre à pied mais toujours nous deux. » (sans cœur) puis crédit
+  contenu centré `pt-14 pb-10`, phrase (`text-sm ink-soft`) « Nos étés se
+  suivent, à vélo puis à pied, toujours ensemble. » (sans cœur) puis crédit
   mono 10 px « 2021–2026 · Site par rndgf ».
 - Mobile, décisions explicites : stats toujours en **grilles pleine largeur
   colonnes égales** (jamais d'inline ferré à gauche) ; 4 stats globales max
