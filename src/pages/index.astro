@@ -202,10 +202,12 @@ const firstYear = Math.min(...tours.map((t) => t.year));
                   <div class="relative hidden self-center overflow-hidden sm:block">
                     <Image
                       src={cover}
-                      width={640}
-                      widths={[320, 640]}
+                      width={560}
+                      widths={[280, 560]}
                       sizes="210px"
                       alt=""
+                      loading={ti === 0 ? "eager" : "lazy"}
+                      fetchpriority={ti === 0 ? "high" : "auto"}
                       class="aspect-square w-full object-cover"
                     />
                   </div>

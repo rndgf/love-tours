@@ -37,3 +37,70 @@ body {
 ::selection {
   background: color-mix(in srgb, var(--color-carmin) 25%, transparent);
 }
+
+/* Picto animé (`.logo-live` : logo du header, médaillon du footer) : au
+   survol, la roue tourne et le cœur bat. Dans le footer, le cœur bat aussi
+   en continu. Origines exprimées dans le viewBox 36×36 du picto :
+   (18,16) = moyeu de la roue. */
+@keyframes seal-beat {
+  0%, 28%, 100% { transform: scale(1); }
+  8% { transform: scale(1.14); }
+  14% { transform: scale(1); }
+  20% { transform: scale(1.1); }
+}
+@keyframes seal-spin {
+  to { transform: rotate(360deg); }
+}
+/* -5.5 = période du pointillé du sentier (dasharray 2.5 + 3) :
+   les pointillés avancent d'un motif par cycle, sans à-coup. */
+@keyframes seal-walk {
+  to { stroke-dashoffset: -5.5; }
+}
+.logo-live .logo-wheel,
+.logo-live .logo-heart {
+  transform-origin: 18px 16px;
+}
+.logo-live:hover .logo-wheel,
+.logo-live:focus-visible .logo-wheel {
+  animation: seal-spin 1.4s linear infinite;
+}
+.logo-live:hover .logo-trail,
+.logo-live:focus-visible .logo-trail {
+  animation: seal-walk 0.7s linear infinite;
+}
+.logo-live:hover .logo-heart,
+.logo-live:focus-visible .logo-heart,
+.footer-seal .logo-heart {
+  animation: seal-beat 1.8s ease-in-out infinite;
+}
+
+/* « & » du header : au survol du logo, l'esperluette laisse place à un cœur
+   carmin qui bat (fondu croisé, les deux glyphes empilés sur la même case). */
+.logo-amp {
+  display: inline-grid;
+}
+.logo-amp > span {
+  grid-area: 1 / 1;
+  text-align: center;
+  transition: opacity 0.25s ease;
+}
+.logo-amp .amp-heart {
+  opacity: 0;
+  transform-origin: 50% 55%;
+}
+.logo-live:hover .amp-char,
+.logo-live:focus-visible .amp-char {
+  opacity: 0;
+}
+.logo-live:hover .amp-heart,
+.logo-live:focus-visible .amp-heart {
+  opacity: 1;
+  animation: seal-beat 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-live .logo-wheel,
+  .logo-live .logo-heart,
+  .logo-live .logo-trail {
+    animation: none !important;
+  }
+}

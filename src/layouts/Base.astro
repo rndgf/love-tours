@@ -40,12 +40,14 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
          de la homepage occupe déjà le haut d'écran). -->
     <header class="border-b border-navy bg-paper/80 sm:sticky sm:top-0 sm:z-30 sm:backdrop-blur-sm">
       <nav class="mx-auto flex max-w-6xl items-center justify-center px-4 py-4 sm:justify-between sm:px-6 sm:py-5">
-        <a href="/" class="flex items-center gap-2.5">
+        <a href="/" class="logo-live flex items-center gap-2.5">
           <!-- Picto : roue de vélo + cœur, sentier pointillé (rando) -->
           <LogoMark class="h-12 w-12 shrink-0" />
           <span class="flex flex-col leading-none">
             <span class="font-display text-[1.35rem] font-semibold tracking-tight sm:text-2xl">
-              Mélanie <span class="text-carmin">&amp;</span> Renaud
+              Mélanie <span class="logo-amp text-carmin"
+                ><span class="amp-char">&amp;</span><span class="amp-heart" aria-hidden="true">&#x2764;&#xFE0E;</span></span
+              > Renaud
             </span>
             <span class="font-mono mt-1.5 text-center text-[10px] font-bold uppercase tracking-[0.22em] text-navy" style="text-indent: 0.22em;">
               Love&nbsp;Tours
@@ -90,13 +92,16 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
           stroke-linecap="round"
         />
       </svg>
-      <!-- Picto en médaillon sous l'arc : rappel du header, format sceau -->
-      <span
-        aria-hidden="true"
-        class="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-paper p-1.5 leading-none"
+      <!-- Picto en médaillon sous l'arc : rappel du header, format sceau.
+           Lien de retour en haut de page (défilement doux via scroll-behavior). -->
+      <a
+        href="#"
+        id="footer-top"
+        aria-label="Retour en haut de page"
+        class="footer-seal logo-live absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-paper p-1.5 leading-none"
       >
         <LogoMark class="h-14 w-14" />
-      </span>
+      </a>
       <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 pb-5 pt-11 text-center sm:px-6">
         <p class="text-sm text-ink-soft">Un été sur deux à vélo, l'autre à pied — toujours à deux. <span class="text-carmin">❤</span></p>
         <p class="font-mono text-[10px] uppercase tracking-[0.18em] text-navy">
@@ -104,5 +109,13 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
         </p>
       </div>
     </footer>
+    <script>
+      // Retour en haut sans laisser « # » dans l'URL (le lien seul reste
+      // fonctionnel sans JavaScript, en défilement instantané).
+      document.getElementById("footer-top")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    </script>
   </body>
 </html>
