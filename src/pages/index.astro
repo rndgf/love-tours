@@ -44,7 +44,7 @@ const firstYear = Math.min(...tours.map((t) => t.year));
   <!-- Relevés cumulés, façon cartouche d'atlas -->
   <section class="mx-auto max-w-4xl px-4 sm:px-6">
     <dl
-      class="grid grid-cols-2 border-y-2 border-navy sm:grid-cols-5"
+      class="grid grid-cols-2 border-y border-navy sm:grid-cols-5"
       style="background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 14%, rgba(255,255,255,0.6) 86%, rgba(255,255,255,0) 100%);"
     >
       {
@@ -174,7 +174,6 @@ const firstYear = Math.min(...tours.map((t) => t.year));
                       [`${Math.round(tour.totals.distanceKm)}km`, "distance", "M2 12 C5 8 7 13 10 9 S14 5 14 4 M11.5 4 H14 V6.5", "dot"],
                       [`${tour.totals.gainM}mD+`, "dénivelé", "M1.5 13 L6 5.5 L8.5 9.5 L11 6 L14.5 13 Z", ""],
                       [formatHours(tour.totals.movingS), "en mouvement", "M2.5 12 a5.5 5.5 0 1 1 11 0 M8 12 L11.2 8.2", ""],
-                      [tour.totals.days, "jours", "M2.5 3.5 h11 v10 h-11 Z M2.5 6.5 h11 M5 1.8 V4.2 M11 1.8 V4.2", ""],
                     ].map(([value, label, icon, extra], i) => (
                       <div class={`text-center ${i > 0 ? "border-l border-navy/20 px-2 sm:px-4" : "pr-2 sm:pr-4"}`}>
                         <svg
