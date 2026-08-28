@@ -31,7 +31,7 @@ sur papier. Tout élément nouveau doit répondre
 | `--color-navy` | `#1e2f4d` | **structure** : bordures, filets, labels, pictos, filigranes |
 | `--color-carmin` | `#b3402f` | **mode vélo** (données : traces, stats, voyageur) |
 | `--color-sapin` | `#3e6b4f` | **mode à pied** |
-| `--color-framboise` | `#a63d6f` | **signature amoureuse** : cœurs du logo (header et médaillon footer), « & » du header, `::selection` 25 % |
+| `--color-framboise` | `#a63d6f` | **signature amoureuse** : cœurs du logo (header et médaillon footer), « & » du header, `::selection` 25 %, plage d'années du header (« 2021–2026 », exception assumée : les années racontent l'histoire du couple) |
 | `--color-laiton` | `#8f6b1f` | **accent générique** : hovers de liens hors navigation d'édition, états actifs hors mode |
 
 Couleurs hors tokens, utilisées dans les cartes générées :
@@ -218,9 +218,15 @@ neutralise tout (cf. AGENT-SITE.md §6).
   **centré optiquement sur le wordmark** (bloc décalé de −29 px = demi
   picto+gap ; le picto déborde à gauche).
 - Footer : `bg-paper/80`, médaillon à cheval sur la bordure ondulée,
-  contenu centré `pt-14 pb-10`, phrase (`text-sm ink-soft`) « Nos étés se
-  suivent, à vélo puis à pied, toujours ensemble. » (sans cœur) puis crédit
-  mono 10 px « 2021–2026 · Site par rndgf ».
+  « LOVE » et « TOURS » de part et d'autre du médaillon sous les pointillés
+  (mono 10 px bold `tracking-[0.22em]` navy, à 20 px du sceau),
+  contenu centré `pt-14 pb-10 gap-6`, phrase en Fraunces italique
+  (`font-display text-xl italic tracking-tight text-ink`) « Nos étés se
+  suivent, à vélo, à pied, à vélo, à pied… toujours ensemble. » présentée
+  en citation :
+  guillemets « » décoratifs en fond (Fraunces droit `text-5xl`, `navy/15`,
+  absolus aux angles haut-gauche / bas-droit, `aria-hidden`), puis crédit
+  mono 9 px « 2021–2026 · Site par rndgf ».
 - Mobile, décisions explicites : stats toujours en **grilles pleine largeur
   colonnes égales** (jamais d'inline ferré à gauche) ; 4 stats globales max
   (« jours dehors » masquée) ; boutons de jour compactés pour tenir sur

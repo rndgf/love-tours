@@ -57,7 +57,7 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
           </span>
         </a>
         <p class="font-mono hidden text-[10px] uppercase tracking-[0.18em] text-navy sm:block">
-          Atlas de nos étés · {firstYear}–{lastYear}
+          Atlas de nos étés · <span class="text-framboise">{firstYear}–{lastYear}</span>
         </p>
       </nav>
     </header>
@@ -94,19 +94,34 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
           stroke-linecap="round"
         />
       </svg>
+      <!-- LOVE / TOURS de part et d'autre du médaillon, sous les pointillés -->
+      <span
+        aria-hidden="true"
+        class="font-mono absolute right-1/2 top-2 mr-14 text-[10px] font-bold uppercase tracking-[0.22em] text-navy"
+        >Love</span
+      >
+      <span
+        aria-hidden="true"
+        class="font-mono absolute left-1/2 top-2 ml-14 text-[10px] font-bold uppercase tracking-[0.22em] text-navy"
+        >Tours</span
+      >
       <!-- Picto en médaillon sous l'arc : rappel du header, format sceau.
-           Lien de retour en haut de page (défilement doux via Lenis). -->
+           Lien vers l'accueil (sur l'accueil : simple remontée douce). -->
       <a
-        href="#"
+        href="/"
         id="footer-top"
-        aria-label="Retour en haut de page"
+        aria-label="Retour à l'accueil"
         class="footer-seal logo-live absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-paper p-1.5 leading-none"
       >
         <LogoMark class="h-14 w-14" />
       </a>
-      <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 pb-10 pt-14 text-center sm:px-6">
-        <p class="text-sm text-ink-soft">Nos étés se suivent, à vélo puis à pied, toujours ensemble.</p>
-        <p class="font-mono text-[10px] uppercase tracking-[0.18em] text-navy">
+      <div class="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 pb-10 pt-14 text-center sm:px-6">
+        <p class="font-display relative text-xl italic tracking-tight text-ink">
+          <span aria-hidden="true" class="pointer-events-none absolute -left-9 -top-5 select-none text-5xl not-italic leading-none text-navy/15">«</span>
+          Nos étés se suivent, à vélo, à pied, à vélo, à pied… toujours ensemble.
+          <span aria-hidden="true" class="pointer-events-none absolute -bottom-7 -right-9 select-none text-5xl not-italic leading-none text-navy/15">»</span>
+        </p>
+        <p class="font-mono text-[9px] uppercase tracking-[0.18em] text-navy">
           {firstYear}–{lastYear} · Site par <a href="https://www.renaudgouffe.fr/" target="_blank" rel="noopener" class="underline decoration-navy/30 underline-offset-2 transition hover:text-laiton">rndgf</a>
         </p>
       </div>
@@ -126,9 +141,10 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
         (window as any).lenis = lenis;
       }
 
-      // Retour en haut sans laisser « # » dans l'URL (le lien seul reste
-      // fonctionnel sans JavaScript, en défilement instantané).
+      // Médaillon du footer : lien vers l'accueil. Déjà sur l'accueil :
+      // remontée douce plutôt qu'un rechargement de page.
       document.getElementById("footer-top")?.addEventListener("click", (e) => {
+        if (location.pathname !== "/") return;
         e.preventDefault();
         const lenis = (window as any).lenis;
         if (lenis) lenis.scrollTo(0);

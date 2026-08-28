@@ -192,8 +192,9 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 
 ### 5.4 Divers
 
-- Retour en haut (médaillon footer, bouton ↑ détail) : via Lenis, repli
-  natif, sans laisser `#` dans l'URL.
+- Médaillon du footer : lien vers l'accueil ; déjà sur l'accueil → remontée
+  douce (Lenis, repli natif) au lieu d'un rechargement. Bouton ↑ de la page
+  détail : remontée douce via Lenis, repli natif.
 - Lightbox : `<dialog>`, Échap natif ; l'Échap « retour carte » est inhibé
   si une lightbox est ouverte.
 - Préchargement : `prefetch` Astro (`prefetchAll`, stratégie viewport).
