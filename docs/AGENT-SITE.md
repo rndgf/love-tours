@@ -50,7 +50,10 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 - `src/data/tours/<slug>.json` — un par édition :
   - `slug` (ex. `2026-zeeland`), `year`, `title`, `mode` (**exactement**
     `"vélo"` ou `"à pied"` — toute autre valeur doit faire échouer le build,
-    voir `src/lib/mode.js`), `flag` (émoji), `country`, `description`,
+    voir `src/lib/mode.js`), `flag` (émoji, ou sentinelle `"bzh"` pour le
+    Gwenn ha Du ; tous les drapeaux sont rendus en SVG Twemoji locaux par
+    `src/components/Flag.astro`, repli texte si absent du set ; le
+    `<title>` d'onglet n'utilise pas le drapeau), `country`, `description`,
     `startDate`/`endDate` (ISO), `cover` (fragment de nom de fichier photo),
     `transferModes` (ex. `["ferry"]`), `bbox` `[W,S,E,N]`, `totals`
     (`distanceKm`, `days`, `gainM`, `movingS`), `days[]`.

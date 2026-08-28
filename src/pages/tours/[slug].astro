@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
+import Flag from "../../components/Flag.astro";
 import TourMap from "../../components/TourMap.astro";
 import DayGallery from "../../components/DayGallery.astro";
 import Lightbox from "../../components/Lightbox.astro";
@@ -62,7 +63,7 @@ const transferModes = tour.transferModes ?? [];
       <h1
         class="font-display mt-1 text-3xl font-semibold tracking-tight sm:text-5xl"
       >
-        {tour.flag}&nbsp;
+        <Flag flag={tour.flag} />&nbsp;
         {tour.title}
       </h1>
     </div>

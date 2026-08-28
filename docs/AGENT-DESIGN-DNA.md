@@ -98,6 +98,13 @@ Codes typographiques :
   `text-indent`). Le « & » est framboise.
 - Favicon distinct : pastille navy, cœur papier (un seul signe, lisible en
   16 px — data-URI dans `Base.astro`).
+- Drapeaux d'édition : servis depuis un set d'images unique (rendu identique
+  sur tous les appareils) — SVG Twemoji (jdecked/twemoji v15.1.0, CC BY 4.0)
+  stockés dans `src/assets/flags/` et inlinés au build par `Flag.astro`
+  (hauteur `1em`, `align -0.125em`, gabarit Twemoji : drapeau 36×26 arrondi
+  rx 4 dans une boîte 36×36). `bzh` = Gwenn ha Du dessiné maison dans ce
+  style (palette Twemoji `#EEE`/`#292F33`, 5 mouchetures). Émoji absent du
+  set : rendu texte (repli) — ajouter le SVG Twemoji correspondant.
 
 ## 5. Motifs graphiques récurrents
 

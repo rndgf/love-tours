@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import Flag from "../components/Flag.astro";
 import MiniMap from "../components/MiniMap.astro";
 import { Image } from "astro:assets";
 import { tours, formatRange, formatHours } from "../lib/tours.js";
@@ -205,7 +206,7 @@ const riderHike = moveIcon("à pied");
                     {tour.country && ` · ${tour.country}`}
                   </p>
                   <h2 class="font-display mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-                    {tour.flag} {tour.title}
+                    <Flag flag={tour.flag} /> {tour.title}
                   </h2>
                   <p class="mt-1 text-sm italic text-ink-soft">
                     {formatRange(tour.startDate, tour.endDate)}

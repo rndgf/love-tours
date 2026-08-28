@@ -1,0 +1,33 @@
+---
+/**
+ * Drapeau d'une édition, servi depuis un set d'images unique pour un rendu
+ * identique sur tous les appareils : SVG Twemoji (jdecked/twemoji v15.1.0,
+ * graphismes CC BY 4.0) stockés dans src/assets/flags/, inlinés au build.
+ * `bzh` = Gwenn ha Du dessiné maison dans le style Twemoji (drapeau régional
+ * sans émoji Unicode). Émoji inconnu du set : rendu texte tel quel (repli).
+ */
+interface Props {
+  flag?: string;
+  class?: string;
+}
+const { flag = "", class: className = "" } = Astro.props;
+
+const files = import.meta.glob("../assets/flags/*.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+const MAP: Record<string, string> = { "🇫🇷": "fr", "🇳🇱": "nl", "🇬🇧": "gb", bzh: "bzh" };
+const svg = MAP[flag] ? (files[`../assets/flags/${MAP[flag]}.svg`] as string) : null;
+---
+
+{
+  svg ? (
+    <span
+      class={`inline-block align-[-0.125em] [&>svg]:h-[1em] [&>svg]:w-auto ${className}`}
+      set:html={svg}
+    />
+  ) : (
+    flag
+  )
+}
