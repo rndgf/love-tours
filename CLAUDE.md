@@ -1,5 +1,15 @@
 # Règles projet Love Tours
 
+## Documentation vivante — TOUJOURS
+
+- **Toute modification du site doit être répercutée immédiatement** dans les
+  documents concernés, sans que l'utilisateur ait à le demander :
+  - `docs/AGENT-SITE.md` (but, contenu, données, comportements JS) ;
+  - `docs/AGENT-DESIGN-DNA.md` (palette, typo, motifs, animations, layout) ;
+  - `README.md` (pipeline, commandes, pièges, contraintes techniques).
+- Vérifier à chaque changement si l'un des trois est impacté ; le mettre à
+  jour dans le même lot de travail (même commit).
+
 ## Déploiement
 
 - **Le déploiement ne se fait jamais silencieusement.** Avant chaque `npm run deploy` (ou `wrangler pages deploy`), annoncer explicitement l'intention de déployer et attendre l'accord de l'utilisateur, sauf si celui-ci vient de le demander dans son dernier message.

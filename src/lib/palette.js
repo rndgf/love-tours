@@ -10,7 +10,7 @@ export const DAY_COLORS = [
   "#3aa6a6", // sarcelle
   "#8a5a44", // brun cacao
   "#7a8a3a", // olive
-  "#a63d6f", // framboise
+  "#6e3a5e", // aubergine (ex-framboise #a63d6f, réservée à la signature amoureuse)
   "#46628f", // bleu ardoise
 ];
 export const dayColor = (n) => {

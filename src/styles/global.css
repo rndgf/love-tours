@@ -11,6 +11,10 @@
   --color-carmin: #b3402f;
   /* Second accent : vert sapin des éditions à pied (le carmin reste au vélo) */
   --color-sapin: #3e6b4f;
+  /* Signature amoureuse (cœurs, « & », sélection) — jamais sur une donnée */
+  --color-framboise: #a63d6f;
+  /* Accent générique (hovers, liens, états actifs hors mode) */
+  --color-laiton: #8f6b1f;
   --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
   --font-body: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
@@ -39,7 +43,7 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-carmin) 25%, transparent);
+  background: color-mix(in srgb, var(--color-framboise) 25%, transparent);
 }
 
 /* Nav mobile des années : le lien de l'année dont la carte est à l'écran
