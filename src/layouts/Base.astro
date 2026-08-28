@@ -38,7 +38,7 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
     </div>
     <!-- Desktop : header épinglé en haut au scroll (mobile : la nav des années
          de la homepage occupe déjà le haut d'écran). -->
-    <header class="border-b-2 border-navy sm:sticky sm:top-0 sm:z-30 sm:bg-paper/95 sm:backdrop-blur-sm">
+    <header class="border-b-2 border-navy bg-paper/80 sm:sticky sm:top-0 sm:z-30 sm:backdrop-blur-sm">
       <nav class="mx-auto flex max-w-6xl items-center justify-center px-4 py-4 sm:justify-between sm:px-6 sm:py-5">
         <a href="/" class="flex items-center gap-2.5">
           <!-- Picto : roue de vélo + cœur, sentier pointillé (rando) -->
@@ -62,10 +62,42 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
       <slot />
     </main>
 
-    <footer class="mt-16 border-t-2 border-navy sm:mt-24">
-      <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 pb-10 pt-5 text-center sm:px-6">
-        <!-- Rappel du picto du header, en plus grand -->
-        <LogoMark class="mb-3 h-16 w-16" />
+    <footer class="relative mt-16 bg-paper/80 sm:mt-24">
+      <!-- Bordure haute en trois morceaux : deux segments + arc qui épouse le
+           médaillon sans l'entourer. -->
+      <span
+        aria-hidden="true"
+        class="absolute left-0 top-[-10px] h-5 w-[calc(50%-38px)]"
+        style="background-image: url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27600%27%20height%3D%2720%27%20viewBox%3D%270%200%20600%2020%27%3E%3Cpath%20d%3D%27M0%2C10%20C40%2C2%2070%2C16%20110%2C9%20C150%2C3%20185%2C18%20230%2C12%20C275%2C6%20300%2C3%20350%2C11%20C395%2C18%20430%2C4%20480%2C7%20C525%2C10%20565%2C15%20600%2C10%27%20fill%3D%27none%27%20stroke%3D%27%231e2f4d%27%20stroke-opacity%3D%270.5%27%20stroke-width%3D%271.6%27%20stroke-dasharray%3D%270.5%206.5%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E); background-repeat: repeat-x;"
+      />
+      <span
+        aria-hidden="true"
+        class="absolute right-0 top-[-10px] h-5 w-[calc(50%-38px)]"
+        style="background-image: url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27600%27%20height%3D%2720%27%20viewBox%3D%270%200%20600%2020%27%3E%3Cpath%20d%3D%27M0%2C10%20C40%2C2%2070%2C16%20110%2C9%20C150%2C3%20185%2C18%20230%2C12%20C275%2C6%20300%2C3%20350%2C11%20C395%2C18%20430%2C4%20480%2C7%20C525%2C10%20565%2C15%20600%2C10%27%20fill%3D%27none%27%20stroke%3D%27%231e2f4d%27%20stroke-opacity%3D%270.5%27%20stroke-width%3D%271.6%27%20stroke-dasharray%3D%270.5%206.5%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E); background-repeat: repeat-x;"
+      />
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 76 38"
+        fill="none"
+        class="absolute left-1/2 top-[-36px] h-[38px] w-[76px] -translate-x-1/2"
+      >
+        <path
+          d="M2 36.5 A36 36 0 0 1 74 36.5"
+          stroke="#1e2f4d"
+          stroke-opacity="0.5"
+          stroke-width="1.6"
+          stroke-dasharray="0.5 6.5"
+          stroke-linecap="round"
+        />
+      </svg>
+      <!-- Picto en médaillon sous l'arc : rappel du header, format sceau -->
+      <span
+        aria-hidden="true"
+        class="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-paper p-1.5 leading-none"
+      >
+        <LogoMark class="h-14 w-14" />
+      </span>
+      <div class="mx-auto flex max-w-6xl flex-wrap items-baseline justify-center gap-x-4 gap-y-1.5 px-4 pb-5 pt-11 text-center sm:px-6">
         <p class="text-sm text-ink-soft">Un été sur deux à vélo, l'autre à pied — toujours à deux. <span class="text-carmin">❤</span></p>
         <p class="font-mono text-[10px] uppercase tracking-[0.18em] text-navy">
           {firstYear}–{lastYear} · Site par <a href="https://www.renaudgouffe.fr/" target="_blank" rel="noopener" class="underline decoration-navy/30 underline-offset-2 transition hover:text-carmin">rndgf</a>

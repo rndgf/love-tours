@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",
+    "d3-contour": "^4.0.2",
     "tailwindcss": "^4.1.0"
   }
 }

@@ -14,6 +14,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isBike } from "../src/lib/mode.js";
 import { HOME as HOME_COORD } from "./lib/home.mjs";
+import { hypsoBands } from "./lib/terrain.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NE_DIR = process.argv[2] ?? path.join(ROOT, "data/naturalearth");
@@ -125,11 +126,75 @@ function extractLines(geojson) {
   return lines;
 }
 
+// Nuances topographiques : bandes hypsométriques très pâles sous le dessin.
+// Grille grossière + simplification forte : c'est un filigrane, et le SVG est
+// inliné dans chaque page — le poids prime sur le détail.
+const { N: HYPSO_N, bands: hypso } = await hypsoBands(BBOX, (CENTER.lat * Math.PI) / 180, W, 120);
+const gx2svg = (gx) => (gx / HYPSO_N) * (W * SCALE);
+const gy2svg = (gy) => (gy / HYPSO_N) * (H * SCALE);
+const ringBboxSpan = (pts) => {
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  return Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+};
+const hypsoPaths = hypso.map(({ level, rings }) => ({
+  level,
+  d: rings
+    .map((ring) => {
+      const pts = rdp(ring.map(([x, y]) => [gx2svg(x), gy2svg(y)]), 4.5);
+      if (pts.length < 4 || ringBboxSpan(pts) < 24) return "";
+      return pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${Math.round(x)},${Math.round(y)}`).join("") + "Z";
+    })
+    .filter(Boolean)
+    .join(""),
+})).filter((b) => b.d.length > 0);
+
 // Trait de côte
 const coast = JSON.parse(fs.readFileSync(path.join(NE_DIR, "coast10.geojson"), "utf8"));
 const coastPaths = extractLines(coast)
   .flatMap((l) => clip(l.coords))
   .map((run) => toPath(run, 1.2))
+  .filter((d) => d.length > 20);
+
+// Mer/océan : lavis bleu pâle sous des terres découpées couleur papier
+// (même principe que les mini-cartes). Polygones de terre Natural Earth,
+// intersectés avec la bbox (Sutherland-Hodgman).
+function clipPolygon(ring, [bx0, by0, bx1, by1]) {
+  const edges = [
+    (p) => p[0] >= bx0, (p) => p[0] <= bx1,
+    (p) => p[1] >= by0, (p) => p[1] <= by1,
+  ];
+  const inters = [
+    (a, b) => [bx0, a[1] + ((bx0 - a[0]) * (b[1] - a[1])) / (b[0] - a[0])],
+    (a, b) => [bx1, a[1] + ((bx1 - a[0]) * (b[1] - a[1])) / (b[0] - a[0])],
+    (a, b) => [a[0] + ((by0 - a[1]) * (b[0] - a[0])) / (b[1] - a[1]), by0],
+    (a, b) => [a[0] + ((by1 - a[1]) * (b[0] - a[0])) / (b[1] - a[1]), by1],
+  ];
+  let poly = ring;
+  for (let e = 0; e < 4; e++) {
+    const out = [];
+    for (let i = 0; i < poly.length; i++) {
+      const a = poly[i], b = poly[(i + 1) % poly.length];
+      const ain = edges[e](a), bin = edges[e](b);
+      if (ain && bin) out.push(b);
+      else if (ain && !bin) out.push(inters[e](a, b));
+      else if (!ain && bin) { out.push(inters[e](a, b)); out.push(b); }
+    }
+    poly = out;
+    if (!poly.length) return [];
+  }
+  return poly;
+}
+const landGeo = JSON.parse(fs.readFileSync(path.join(NE_DIR, "land10.geojson"), "utf8"));
+const landPaths = landGeo.features
+  .flatMap((f) => {
+    const g = f.geometry;
+    if (g.type === "Polygon") return [g.coordinates[0]];
+    if (g.type === "MultiPolygon") return g.coordinates.map((p) => p[0]);
+    return [];
+  })
+  .map((r) => clipPolygon(r, BBOX))
+  .filter((r) => r.length > 2)
+  .map((r) => toPath(r, 1.2) + "Z")
   .filter((d) => d.length > 20);
 
 // Fleuves : Seine et Loire seulement (la maison est sur la Seine, la Loire porte le tour 2021)
@@ -154,13 +219,18 @@ const vbW = Math.round(W * SCALE), vbH = Math.round(H * SCALE);
 const hx = px(HOME.lon), hy = py(HOME.lat);
 
 const svg = `<svg class="h-full w-full text-navy" viewBox="0 0 ${vbW} ${vbH}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-  <g fill="none" stroke="currentColor" opacity="0.08">
-    <g stroke-width="1.1">
-${coastPaths.map((d) => `      <path d="${d}" />`).join("\n")}
-    </g>
-    <g stroke-width="0.9" stroke-dasharray="1 3">
-${riverPaths.map((d) => `      <path d="${d}" />`).join("\n")}
-    </g>
+  <rect width="${vbW}" height="${vbH}" fill="#3f7fb5" fill-opacity="0.07" />
+  <g fill="var(--color-paper)" stroke="none">
+${landPaths.map((d) => `    <path d="${d}" />`).join("\n")}
+  </g>
+  <g fill="#c9a227" stroke="none" fill-rule="evenodd">
+${hypsoPaths.map((b, i) => `    <path d="${b.d}" fill-opacity="${(0.02 + i * 0.015).toFixed(3)}" />`).join("\n")}
+  </g>
+  <g fill="none" stroke="currentColor" opacity="0.08" stroke-width="1.1">
+${coastPaths.map((d) => `    <path d="${d}" />`).join("\n")}
+  </g>
+  <g fill="none" stroke="#3f7fb5" stroke-opacity="0.3" stroke-width="1" stroke-linecap="round">
+${riverPaths.map((d) => `    <path d="${d}" />`).join("\n")}
   </g>
   <g fill="none" stroke="var(--color-carmin)" stroke-width="2.2" stroke-linecap="round" opacity="0.12">
 ${bikePaths.map((d) => `    <path d="${d}" />`).join("\n")}

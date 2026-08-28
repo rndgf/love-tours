@@ -12,11 +12,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { distM, LOOP_MAX_M } from "../src/lib/geo.js";
+import { hypsoBands } from "./lib/terrain.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NE_DIR = process.argv[2] ?? path.join(ROOT, "data/naturalearth");
 
-for (const f of ["land10.geojson", "coast10.geojson"]) {
+for (const f of ["land10.geojson", "coast10.geojson", "rivers10.geojson"]) {
   if (!fs.existsSync(path.join(NE_DIR, f))) {
     console.error(
       `Données Natural Earth absentes : ${path.join(NE_DIR, f)}\n` +
@@ -31,6 +32,25 @@ const KM_PER_DEG = 111.32;
 // Marge autour de la trace (fraction du plus grand côté).
 const MARGIN = 0.22;
 
+/** Bandes hypsométriques du cadre, en chemins SVG viewBox 0-100. */
+async function hypsoPaths(frame, midLatRad, sideKm) {
+  const { N, bands } = await hypsoBands(frame, midLatRad, sideKm);
+  const scale = 100 / N;
+  return bands
+    .map(({ level, rings }) => ({
+      level,
+      d: rings
+        .map((ring) => {
+          const pts = rdp(ring.map(([x, y]) => [x * scale, y * scale]), 0.4);
+          if (pts.length < 4) return "";
+          return pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join("") + "Z";
+        })
+        .filter(Boolean)
+        .join(""),
+    }))
+    .filter((band) => band.d.length > 0);
+}
+
 const land = JSON.parse(fs.readFileSync(path.join(NE_DIR, "land10.geojson"), "utf8"));
 const coast = JSON.parse(fs.readFileSync(path.join(NE_DIR, "coast10.geojson"), "utf8"));
 
@@ -41,6 +61,16 @@ const landRings = land.features.flatMap((f) => {
   return [];
 });
 const coastLines = coast.features.flatMap((f) => {
+  const g = f.geometry;
+  if (g.type === "LineString") return [g.coordinates];
+  if (g.type === "MultiLineString") return g.coordinates;
+  return [];
+});
+
+// Cours d'eau majeurs : tout le jeu Natural Earth 10m (il ne contient déjà
+// que les grands fleuves — Seine, Loire, Escaut… — le cadrage fait le tri).
+const rivers = JSON.parse(fs.readFileSync(path.join(NE_DIR, "rivers10.geojson"), "utf8"));
+const riverLines = rivers.features.flatMap((f) => {
   const g = f.geometry;
   if (g.type === "LineString") return [g.coordinates];
   if (g.type === "MultiLineString") return g.coordinates;
@@ -145,21 +175,35 @@ for (const file of fs.readdirSync(path.join(ROOT, "public/tours")).filter((f) =>
     .flatMap((l) => clipLine(l, frame))
     .map((run) => toD(run, 0.25))
     .filter((d) => d.length > 10);
+  const riverPaths = riverLines
+    .flatMap((l) => clipLine(l, frame))
+    .map((run) => toD(run, 0.25))
+    .filter((d) => d.length > 10);
   const tracePaths = segs.map((s) => toD(s, 0.35));
+  // Liaisons (bus, ferry, train) : pointillé discret, doublons exclus.
+  const transferPaths = g.features
+    .filter((f) => f.properties?.transfer && !f.properties.dup)
+    .flatMap((f) => (f.geometry.type === "MultiLineString" ? f.geometry.coordinates : [f.geometry.coordinates]))
+    .flatMap((l) => clipLine(l, frame))
+    .map((run) => toD(run, 0.5))
+    .filter((d) => d.length > 5);
 
   // Échelle graphique : segment rond (5/10/20/50 km) ≈ 25 unités de large max.
   const kmPerUnit = sideKm / 100;
   const scaleKm = [100, 50, 20, 10, 5].find((k) => k / kmPerUnit <= 28) ?? 5;
   const scaleUnits = +(scaleKm / kmPerUnit).toFixed(1);
 
+  const topo = await hypsoPaths(frame, lat0, sideKm);
+
   const startLL = segs[0][0];
   const endLL = segs.at(-1).at(-1);
-  const out = { land: landPaths, coast: coastPaths, trace: tracePaths,
+  const out = { land: landPaths, coast: coastPaths, rivers: riverPaths, topo,
+    trace: tracePaths, transfers: transferPaths,
     start: [ +px(startLL[0]).toFixed(1), +py(startLL[1]).toFixed(1) ],
     end: [ +px(endLL[0]).toFixed(1), +py(endLL[1]).toFixed(1) ],
     // Boucle (départ ≈ arrivée) : le composant affiche alors un marqueur combiné.
     loop: distM(startLL, endLL) < LOOP_MAX_M,
     scaleKm, scaleUnits };
   fs.writeFileSync(path.join(ROOT, `src/data/minimaps/${slug}.json`), JSON.stringify(out));
-  console.log(`✓ ${slug} : ${landPaths.length} terres, ${coastPaths.length} côtes, cadre ${Math.round(sideKm)} km, échelle ${scaleKm} km`);
+  console.log(`✓ ${slug} : ${landPaths.length} terres, ${coastPaths.length} côtes, ${riverPaths.length} fleuves, ${transferPaths.length} liaisons, ${topo.length} bandes topo, cadre ${Math.round(sideKm)} km, échelle ${scaleKm} km`);
 }

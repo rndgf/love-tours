@@ -87,7 +87,11 @@ API, sans quota. Une couleur par journée (`src/lib/palette.js`).
 
 Les données [Natural Earth](https://www.naturalearthdata.com) (domaine public) sont dans
 `data/naturalearth/` (hors dépôt — les scripts affichent comment les retélécharger si
-absentes). Après ajout d'une édition (inclus dans `npm run tours:all`) :
+absentes). Les mini-cartes portent aussi fleuves, liaisons (bus/ferry/train, pointillé)
+et bandes hypsométriques (60/120/180 m) calculées depuis les tuiles terrain AWS
+« terrarium », mises en cache dans `data/terrain/` (versionné : la régénération est
+hors ligne une fois le cache rempli). Après ajout d'une édition (inclus dans
+`npm run tours:all`) :
 
 ```bash
 npm run tours:minimaps     # mini-cartes des cartouches (homepage)

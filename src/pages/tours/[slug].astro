@@ -131,7 +131,7 @@ const transferModes = tour.transferModes ?? [];
 
   <!-- Planche cartographique -->
   <section class="mx-auto max-w-6xl px-4 sm:px-6">
-    <figure class="border-2 border-navy bg-white/70">
+    <figure class="border-2 border-navy bg-white/80">
       <figcaption class="border-b-2 border-navy px-4 py-2">
         <span class="font-display text-lg font-semibold tracking-wide text-navy">
           {cornerNW}
@@ -184,7 +184,7 @@ const transferModes = tour.transferModes ?? [];
   >
     {
       tour.days.map((day) => (
-        <article class="border border-navy/25 bg-white/60 p-4 sm:p-7">
+        <article class="border border-navy/40 bg-white/75 p-4 sm:p-7">
           <header class="sm:flex sm:items-center sm:justify-between sm:gap-6">
             <div class="min-w-0">
               <div class="flex items-stretch gap-3">
@@ -321,7 +321,7 @@ const transferModes = tour.transferModes ?? [];
   <button
     id="back-to-top"
     aria-label="Retour en haut"
-    class={`font-mono fixed bottom-5 right-5 z-20 h-11 w-11 items-center justify-center border border-navy/40 bg-paper text-lg text-navy shadow-sm transition hover:border-navy ${hoverAccent(tour)}`}
+    class={`font-mono fixed bottom-5 right-5 z-20 h-11 w-11 cursor-default items-center justify-center border border-navy/40 bg-paper text-lg text-navy shadow-sm transition hover:border-navy ${hoverAccent(tour)}`}
     style="display:none">↑</button
   >
 
