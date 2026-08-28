@@ -40,7 +40,9 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
          de la homepage occupe déjà le haut d'écran). -->
     <header class="border-b border-navy bg-paper/80 sm:sticky sm:top-0 sm:z-30 sm:backdrop-blur-sm">
       <nav class="mx-auto flex max-w-6xl items-center justify-center px-4 py-4 sm:justify-between sm:px-6 sm:py-5">
-        <a href="/" class="logo-live flex items-center gap-2.5">
+        <!-- Mobile : décalé d'une demi-largeur de picto (48px + gap 10px) pour
+             centrer optiquement le wordmark, pas le bloc picto+texte. -->
+        <a href="/" class="logo-live flex -translate-x-[29px] items-center gap-2.5 sm:translate-x-0">
           <!-- Picto : roue de vélo + cœur, sentier pointillé (rando) -->
           <LogoMark class="h-12 w-12 shrink-0" />
           <span class="flex flex-col leading-none">
@@ -114,8 +116,12 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
 
       // Défilement global lissé (inertie). anchors: true reprend les liens
       // d'ancre (#y2021, #jN…). Désactivé si l'utilisateur préfère réduire
-      // les animations — retour au défilement natif.
-      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // les animations, et sous 640 px : le scroll tactile mobile est déjà
+      // inertiel nativement — Lenis n'y apporterait que du main thread.
+      if (
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+        window.matchMedia("(min-width: 640px)").matches
+      ) {
         const lenis = new Lenis({ autoRaf: true, anchors: true });
         (window as any).lenis = lenis;
       }

@@ -114,7 +114,7 @@ const transferModes = tour.transferModes ?? [];
 
     <dl
       id="edition-stats"
-      class="mt-9 grid scroll-mt-4 grid-cols-2 border-y-2 border-navy sm:grid-cols-4 sm:scroll-mt-28"
+      class="mt-9 grid scroll-mt-4 grid-cols-2 border-y border-navy sm:grid-cols-4 sm:scroll-mt-28"
       style="background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 14%, rgba(255,255,255,0.6) 86%, rgba(255,255,255,0) 100%);"
     >
       {
@@ -125,13 +125,13 @@ const transferModes = tour.transferModes ?? [];
           [formatHours(tour.totals.movingS), "effort"],
         ].map(([value, label], i) => (
           <div
-            class={`border-navy/20 px-2 py-3 text-center sm:px-4 sm:py-4
+            class={`border-navy/20 px-3 py-4 text-center sm:px-4 sm:py-5
           ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""}`}
           >
-            <dd class={`font-mono text-xl font-medium ${accent} sm:text-2xl`}>
+            <dd class={`font-mono text-2xl font-medium ${accent} sm:text-3xl`}>
               <span class="stat-count">{value}</span>
             </dd>
-            <dt class="font-mono mt-0.5 text-[9px] uppercase tracking-[0.18em] text-navy">
+            <dt class="font-mono mt-1 text-[9px] uppercase tracking-[0.18em] text-navy">
               {label}
             </dt>
           </div>
@@ -150,13 +150,13 @@ const transferModes = tour.transferModes ?? [];
       </figcaption>
       <TourMap slug={tour.slug} bbox={tour.bbox} days={tour.days} />
       <div
-        class="flex flex-wrap items-center justify-between gap-2 border-t-2 border-navy px-4 py-2.5"
+        class="flex flex-wrap items-center justify-center gap-2 border-t-2 border-navy px-2 py-2.5 sm:justify-between sm:px-4"
       >
-        <div class="flex flex-wrap gap-1.5">
+        <div class="flex flex-wrap justify-center gap-1 sm:justify-start sm:gap-1.5">
           <button
             data-zoom-day="0"
             data-zoom-slug={tour.slug}
-            class="font-mono min-h-[30px] border border-navy/30 bg-paper px-2 py-0.5 text-[9px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:min-h-0 sm:px-2.5 sm:py-1 sm:text-[10px]"
+            class="font-mono min-h-[30px] border border-navy/30 bg-paper px-1 py-0.5 text-[9px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:min-h-0 sm:px-2.5 sm:py-1 sm:text-[10px]"
             >Tout</button
           >
           {
@@ -164,10 +164,10 @@ const transferModes = tour.transferModes ?? [];
               <button
                 data-zoom-day={day.n}
                 data-zoom-slug={tour.slug}
-                class="font-mono flex min-h-[30px] items-center gap-1 border border-navy/30 bg-paper px-2 py-0.5 text-[9px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:gap-1.5 sm:min-h-0 sm:px-2.5 sm:py-1 sm:text-[10px]"
+                class="font-mono flex min-h-[30px] items-center gap-1 border border-navy/30 bg-paper px-1 py-0.5 text-[9px] uppercase tracking-[0.1em] text-navy transition hover:border-navy sm:gap-1.5 sm:min-h-0 sm:px-2.5 sm:py-1 sm:text-[10px]"
               >
                 <span
-                  class="inline-block h-2 w-2"
+                  class="inline-block h-1.5 w-1.5 sm:h-2 sm:w-2"
                   style={`background:${dayColor(day.n)}`}
                 />
                 {day.label}
@@ -229,36 +229,26 @@ const transferModes = tour.transferModes ?? [];
                 </div>
               </div>
               {!day.noTrace && (
-                <p class="font-mono mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-navy sm:hidden">
-                  <span class="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox={ICONS.route.viewBox} preserveAspectRatio="xMidYMax meet" fill="none" aria-hidden="true">
-                      <path d={ICONS.route.d} class="fill-navy" />
-                    </svg>
-                    <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{day.distanceKm}</strong>km</span>
-                  </span>
-                  <span class="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox={ICONS.mountain.viewBox} preserveAspectRatio="xMidYMax meet" fill="none" aria-hidden="true">
-                      <path d={ICONS.mountain.d} class="fill-navy" />
-                    </svg>
-                    <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{day.gainM}m</strong>D+</span>
-                  </span>
-                  <span class="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox={move.viewBox} preserveAspectRatio="xMidYMax meet" fill="none" aria-hidden="true">
-                      <path d={move.d} class="fill-navy" />
-                    </svg>
-                    <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{formatHours(day.movingS)}</strong></span>
-                  </span>
-                  <span class="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox={ICONS.clock.viewBox} preserveAspectRatio="xMidYMax meet" fill="none" aria-hidden="true">
-                      <path d={ICONS.clock.d} class="fill-navy" />
-                    </svg>
-                    <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{formatHours(day.elapsedS)}</strong></span>
-                  </span>
-                </p>
+                <div class="font-mono mt-5 grid grid-cols-4 sm:hidden">
+                  {[
+                    [`${day.distanceKm}km`, "distance", ICONS.route.d, ICONS.route.viewBox],
+                    [`${day.gainM}mD+`, "dénivelé", ICONS.mountain.d, ICONS.mountain.viewBox],
+                    [formatHours(day.movingS), "effort", move.d, move.viewBox],
+                    [formatHours(day.elapsedS), "au total", ICONS.clock.d, ICONS.clock.viewBox],
+                  ].map(([value, label, icon, vb], i) => (
+                    <div class={`text-center ${i > 0 ? "border-l border-navy/20" : ""}`}>
+                      <svg width="14" height="14" viewBox={vb} preserveAspectRatio="xMidYMax meet" fill="none" class="mx-auto mb-1" aria-hidden="true">
+                        <path d={icon} class="fill-navy" />
+                      </svg>
+                      <div class="text-[11px] font-medium" style={`color:${dayColor(day.n)}`}>{value}</div>
+                      <div class="mt-0.5 text-[8px] uppercase tracking-[0.14em] text-navy">{label}</div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
             {!day.noTrace && (
-              <div class="font-mono hidden shrink-0 self-center sm:flex">
+              <div class="font-mono hidden shrink-0 grid-cols-4 self-center sm:grid">
                 {[
                   [`${day.distanceKm}km`, "distance", ICONS.route.d, "fa", ICONS.route.viewBox],
                   [`${day.gainM}mD+`, "dénivelé", ICONS.mountain.d, "fa", ICONS.mountain.viewBox],
@@ -310,7 +300,7 @@ const transferModes = tour.transferModes ?? [];
           ←
         </a>
       ) : (
-        <span class="cursor-default select-none text-4xl text-navy/15" aria-hidden="true">←</span>
+        <span class="cursor-default select-none text-4xl text-navy/25" aria-hidden="true">←</span>
       )
     }
     {
@@ -324,7 +314,7 @@ const transferModes = tour.transferModes ?? [];
           →
         </a>
       ) : (
-        <span class="cursor-default select-none text-4xl text-navy/15" aria-hidden="true">→</span>
+        <span class="cursor-default select-none text-4xl text-navy/25" aria-hidden="true">→</span>
       )
     }
   </nav>

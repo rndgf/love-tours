@@ -16,6 +16,14 @@
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
+/* Mobile : ancres en défilement doux natif (Lenis n'est actif qu'à partir
+   de 640 px — voir Base.astro — et exige scroll-behavior auto). */
+@media (max-width: 639px) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 /* Desktop : échelle globale à 90 % (typo + espacements en rem), rendu plus
    fin, façon planche gravée. Mobile : base 16 px conservée (lisibilité). */
 @media (min-width: 640px) {
@@ -32,6 +40,13 @@ body {
 
 ::selection {
   background: color-mix(in srgb, var(--color-carmin) 25%, transparent);
+}
+
+/* Nav mobile des années : le lien de l'année dont la carte est à l'écran
+   prend l'accent de son mode (--accent posée sur le lien). */
+.yn-link.is-active {
+  background: var(--accent);
+  color: var(--color-paper);
 }
 
 /* Timeline de la homepage : au survol d'une carte, son année et le point du
@@ -56,11 +71,14 @@ body {
 /* Picto animé (`.logo-live` : logo du header, médaillon du footer) : le
    cœur bat en continu ; au survol, la roue tourne et le sentier défile.
    Origines exprimées dans le viewBox 36×36 du picto : (18,16) = moyeu. */
+/* Double battement dans le premier quart du cycle, puis repos : entre 22 %
+   et 100 % les valeurs sont identiques → aucun repaint pendant ~78 % du
+   temps (perf : animation permanente sur path SVG, non compositée). */
 @keyframes seal-beat {
-  0%, 28%, 100% { transform: scale(1); }
-  8% { transform: scale(1.14); }
-  14% { transform: scale(1); }
-  20% { transform: scale(1.1); }
+  0%, 22%, 100% { transform: scale(1); }
+  6% { transform: scale(1.14); }
+  11% { transform: scale(1); }
+  16% { transform: scale(1.1); }
 }
 @keyframes seal-spin {
   to { transform: rotate(360deg); }
@@ -73,6 +91,8 @@ body {
 .logo-live .logo-wheel,
 .logo-live .logo-heart {
   transform-origin: 18px 16px;
+  /* Isole le repaint des animations (le header est sticky + backdrop-blur). */
+  will-change: transform;
 }
 .logo-live:hover .logo-wheel,
 .logo-live:focus-visible .logo-wheel {
@@ -83,7 +103,7 @@ body {
   animation: seal-walk 0.7s linear infinite;
 }
 .logo-live .logo-heart {
-  animation: seal-beat 1.8s ease-in-out infinite;
+  animation: seal-beat 4s ease-in-out infinite;
 }
 
 /* « & » du header : au survol du logo, l'esperluette laisse place à un cœur

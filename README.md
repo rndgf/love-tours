@@ -109,8 +109,26 @@ npm run deploy
 ```
 
 Premier déploiement : `npx wrangler login` puis créer le projet avec la commande
-ci-dessus. Le site n'est pas indexé (robots.txt + meta noindex) : accessible
-uniquement à qui a l'URL.
+ci-dessus. Le site n'est pas indexé — trois couches : `robots.txt`, meta noindex
+(HTML) et en-tête `X-Robots-Tag` servi sur toutes les ressources via
+`public/_headers`, photos comprises. Accessible uniquement à qui a l'URL.
+
+## Défilement lissé (Lenis) — contraintes
+
+Le scroll est lissé par [Lenis](https://lenis.darkroom.engineering/) à partir de
+640 px (mobile : natif ; `prefers-reduced-motion` : natif). Deux règles à ne pas
+casser :
+
+- `html { scroll-behavior: smooth }` est **interdit** quand Lenis est actif
+  (conflit documenté) — il n'est réintroduit qu'en `@media (max-width: 639px)`
+  (`src/styles/global.css`).
+- Tout défilement programmatique passe par `window.lenis?.scrollTo(...)` avec
+  repli natif (`Base.astro` : retour en haut ; `[slug].astro` : cartouche de
+  stats, back-to-top) — un `scrollIntoView` natif se fait rattraper par la
+  position interne de Lenis.
+
+Les compteurs des cartouches de stats s'animent via `window.statCountUp`
+(défini dans `Base.astro`, absent si `prefers-reduced-motion`).
 
 ## Piège connu — dev server et images en 500
 
@@ -132,4 +150,3 @@ vos noms de fichiers fait foi (`01-depart.jpg`, `02-pause.jpg`…). Relancer
 
 La photo de couverture d'une édition (homepage) se choisit dans `edition.json` :
 `"cover": "fragment-du-nom-de-fichier"`.
-# love-tours
