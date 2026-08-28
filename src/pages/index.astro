@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro";
 import MiniMap from "../components/MiniMap.astro";
 import { Image } from "astro:assets";
 import { tours, formatRange, formatHours } from "../lib/tours.js";
-import { accentText, isBike, moveIcon } from "../lib/mode.js";
+import { accentText, accentVar, isBike, moveIcon } from "../lib/mode.js";
 import { ICONS } from "../lib/pictos.js";
 import { coverFor } from "../lib/photos.js";
 
@@ -18,6 +18,9 @@ const globalStats = [
   [sum(tours, (t) => t.totals.gainM), "m", "de dénivelé +"],
 ];
 const firstYear = Math.min(...tours.map((t) => t.year));
+// Pictos du « voyageur » qui parcourt la timeline au scroll (desktop).
+const riderBike = moveIcon("vélo");
+const riderHike = moveIcon("à pied");
 ---
 
 <Base title="Love Tours ❤ — nos étés à deux">
@@ -56,7 +59,7 @@ const firstYear = Math.min(...tours.map((t) => t.year));
           ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""} ${i === 4 ? "col-span-2 sm:col-span-1" : ""}`}
           >
             <dd class="font-mono text-2xl font-medium text-carmin sm:text-3xl">
-              {value}{unit && <span class="text-base sm:text-lg">{unit}</span>}
+              <span class="stat-count">{value}</span>{unit && <span class="text-base sm:text-lg">{unit}</span>}
             </dd>
             <dt class="font-mono mt-1 text-[9px] uppercase tracking-[0.18em] text-navy">
               {label}
@@ -87,8 +90,10 @@ const firstYear = Math.min(...tours.map((t) => t.year));
   </nav>
 
   <!-- Planches des éditions, sur le fil des années -->
-  <section class="mx-auto mt-10 max-w-6xl px-4 sm:mt-12 sm:px-6">
-    <ol class="relative space-y-8">
+  <!-- pb desktop : marge de scroll sous la dernière carte (2021) pour que le
+       voyageur de la timeline puisse descendre jusqu'en bas du fil. -->
+  <section class="mx-auto mt-10 max-w-6xl px-4 sm:mt-12 sm:px-6 min-[1400px]:pb-12">
+    <ol id="timeline" class="relative space-y-8">
       <div
         aria-hidden="true"
         class="absolute bottom-6 left-[-3.25rem] top-6 hidden w-9 -translate-x-1/2 min-[1400px]:block"
@@ -104,21 +109,40 @@ const firstYear = Math.min(...tours.map((t) => t.year));
         <!-- Pointe de flèche cartographique (queue d'aronde), pleine -->
         <path d="M8 2 L13 12 L8 9.2 L3 12 Z" fill="#1e2f4d" />
       </svg>
+      <!-- Voyageur : cycliste ou randonneur (selon la carte en regard) qui
+           descend le fil au rythme du scroll (script en bas de page). -->
+      <div
+        id="tl-rider"
+        aria-hidden="true"
+        class="pointer-events-none absolute left-[-3.25rem] top-6 z-10 hidden h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-navy/30 bg-paper min-[1400px]:flex"
+      >
+        <svg viewBox={riderBike.viewBox} class="rider-bike h-4 w-4" aria-hidden="true">
+          <path d={riderBike.d} fill="var(--color-carmin)" />
+        </svg>
+        <svg viewBox={riderHike.viewBox} class="rider-hike hidden h-4 w-4" aria-hidden="true">
+          <path d={riderHike.d} fill="var(--color-sapin)" />
+        </svg>
+      </div>
       {
         tours.map((tour, ti) => {
           const cover = coverFor(tour);
           const accent = accentText(tour.mode);
           return (
-            <li id={`y${tour.year}`} class="relative scroll-mt-14">
+            <li
+              id={`y${tour.year}`}
+              class="timeline-item relative scroll-mt-14"
+              style={`--accent: ${accentVar(tour.mode)}`}
+              data-mode={tour.mode}
+            >
               <span
                 aria-hidden="true"
-                class="font-display absolute left-[-8.25rem] top-1/2 hidden w-16 -translate-y-1/2 text-right text-2xl font-semibold text-navy min-[1400px]:block"
+                class="tl-year font-display absolute left-[-8.25rem] top-1/2 hidden w-16 -translate-y-1/2 text-right text-2xl font-semibold text-navy min-[1400px]:block"
               >
                 {tour.year}
               </span>
               <span
                 aria-hidden="true"
-                class="absolute left-[-3.25rem] top-1/2 hidden h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-paper bg-navy min-[1400px]:block"
+                class="tl-dot absolute left-[-3.25rem] top-1/2 hidden h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-paper bg-navy min-[1400px]:block"
               />
               <a
                 href={`/tours/${tour.slug}/`}
@@ -220,3 +244,61 @@ const firstYear = Math.min(...tours.map((t) => t.year));
     </ol>
   </section>
 </Base>
+
+<script>
+  // Voyageur de la timeline : suit le centre du viewport le long du fil
+  // (clampé aux extrémités), et prend le picto/la couleur du mode de la
+  // carte en regard. Mise à jour au scroll via requestAnimationFrame.
+  const ol = document.getElementById("timeline");
+  const rider = document.getElementById("tl-rider");
+  if (ol && rider) {
+    const items = [...ol.querySelectorAll<HTMLElement>(".timeline-item")];
+    const bike = rider.querySelector(".rider-bike");
+    const hike = rider.querySelector(".rider-hike");
+    const PAD = 24; // le fil s'arrête à 1.5rem des bords du <ol> (top-6/bottom-6)
+    let targetY = PAD;
+    let curY = PAD;
+    let raf = 0;
+    // Le voyageur rattrape sa cible à 12 % de l'écart par image : petit
+    // retard volontaire sur le scroll, arrêt net sous 0,5 px d'écart.
+    const animate = () => {
+      curY += (targetY - curY) * 0.12;
+      if (Math.abs(targetY - curY) < 0.5) {
+        curY = targetY;
+        raf = 0;
+      } else {
+        raf = requestAnimationFrame(animate);
+      }
+      rider.style.top = `${curY}px`;
+    };
+    const update = () => {
+      const rect = ol.getBoundingClientRect();
+      const center = window.innerHeight / 2;
+      // Carte dont la zone verticale contient le centre du viewport.
+      // Aucune (au-dessus de la timeline, ou tout en bas) : voyageur masqué —
+      // pas de picto par défaut qui recouvrirait la flèche du fil.
+      const cur = items.find((li) => {
+        const r = li.getBoundingClientRect();
+        return center >= r.top - 16 && center < r.bottom + 16;
+      });
+      rider.style.visibility = cur ? "visible" : "hidden";
+      if (!cur) return;
+      targetY = Math.min(Math.max(center - rect.top, PAD), rect.height - PAD);
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        curY = targetY;
+        rider.style.top = `${curY}px`;
+      } else if (!raf) {
+        raf = requestAnimationFrame(animate);
+      }
+      const onBike = cur.dataset.mode === "vélo";
+      bike?.classList.toggle("hidden", !onBike);
+      hike?.classList.toggle("hidden", onBike);
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    // Position de départ sans animation (chargement en milieu de page).
+    update();
+    curY = targetY;
+    rider.style.top = `${curY}px`;
+  }
+</script>

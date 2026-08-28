@@ -16,10 +16,6 @@
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 /* Desktop : échelle globale à 90 % (typo + espacements en rem), rendu plus
    fin, façon planche gravée. Mobile : base 16 px conservée (lisibilité). */
 @media (min-width: 640px) {
@@ -38,10 +34,28 @@ body {
   background: color-mix(in srgb, var(--color-carmin) 25%, transparent);
 }
 
-/* Picto animé (`.logo-live` : logo du header, médaillon du footer) : au
-   survol, la roue tourne et le cœur bat. Dans le footer, le cœur bat aussi
-   en continu. Origines exprimées dans le viewBox 36×36 du picto :
-   (18,16) = moyeu de la roue. */
+/* Timeline de la homepage : au survol d'une carte, son année et le point du
+   fil prennent l'accent du mode (--accent posée sur le <li> : carmin vélo,
+   sapin à pied) ; le point grossit. */
+.timeline-item .tl-year,
+.timeline-item .tl-dot {
+  transition: color 0.3s ease, background-color 0.3s ease, scale 0.3s ease;
+}
+.timeline-item .tl-year {
+  transform-origin: 100% 50%;
+}
+.timeline-item:hover .tl-year {
+  color: var(--accent);
+  scale: 1.1;
+}
+.timeline-item:hover .tl-dot {
+  background-color: var(--accent);
+  scale: 1.5;
+}
+
+/* Picto animé (`.logo-live` : logo du header, médaillon du footer) : le
+   cœur bat en continu ; au survol, la roue tourne et le sentier défile.
+   Origines exprimées dans le viewBox 36×36 du picto : (18,16) = moyeu. */
 @keyframes seal-beat {
   0%, 28%, 100% { transform: scale(1); }
   8% { transform: scale(1.14); }
@@ -68,9 +82,7 @@ body {
 .logo-live:focus-visible .logo-trail {
   animation: seal-walk 0.7s linear infinite;
 }
-.logo-live:hover .logo-heart,
-.logo-live:focus-visible .logo-heart,
-.footer-seal .logo-heart {
+.logo-live .logo-heart {
   animation: seal-beat 1.8s ease-in-out infinite;
 }
 

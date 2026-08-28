@@ -93,7 +93,7 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
         />
       </svg>
       <!-- Picto en médaillon sous l'arc : rappel du header, format sceau.
-           Lien de retour en haut de page (défilement doux via scroll-behavior). -->
+           Lien de retour en haut de page (défilement doux via Lenis). -->
       <a
         href="#"
         id="footer-top"
@@ -102,7 +102,7 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
       >
         <LogoMark class="h-14 w-14" />
       </a>
-      <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 pb-5 pt-11 text-center sm:px-6">
+      <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 pb-10 pt-14 text-center sm:px-6">
         <p class="text-sm text-ink-soft">Un été sur deux à vélo, l'autre à pied — toujours à deux. <span class="text-carmin">❤</span></p>
         <p class="font-mono text-[10px] uppercase tracking-[0.18em] text-navy">
           {firstYear}–{lastYear} · Site par <a href="https://www.renaudgouffe.fr/" target="_blank" rel="noopener" class="underline decoration-navy/30 underline-offset-2 transition hover:text-carmin">rndgf</a>
@@ -110,12 +110,76 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
       </div>
     </footer>
     <script>
+      import Lenis from "lenis";
+
+      // Défilement global lissé (inertie). anchors: true reprend les liens
+      // d'ancre (#y2021, #jN…). Désactivé si l'utilisateur préfère réduire
+      // les animations — retour au défilement natif.
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const lenis = new Lenis({ autoRaf: true, anchors: true });
+        (window as any).lenis = lenis;
+      }
+
       // Retour en haut sans laisser « # » dans l'URL (le lien seul reste
       // fonctionnel sans JavaScript, en défilement instantané).
       document.getElementById("footer-top")?.addEventListener("click", (e) => {
         e.preventDefault();
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        const lenis = (window as any).lenis;
+        if (lenis) lenis.scrollTo(0);
+        else window.scrollTo({ top: 0, behavior: "smooth" });
       });
+
+      // Compteurs des cartouches de stats (.stat-count) : au premier
+      // affichage, chaque nombre défile de 0 jusqu'à sa valeur (décélération
+      // en fin de course). Les caractères non numériques (« h » de l'effort)
+      // restent fixes ; un segment écrit avec zéro initial (« 05 ») garde sa
+      // largeur (padStart), les autres s'allongent naturellement.
+      const counters = document.querySelectorAll<HTMLElement>(".stat-count");
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const countUp = (el: HTMLElement) => {
+          const final = el.textContent ?? "";
+          // Découpe en segments : suites de chiffres (animées) / reste (fixe).
+          const parts = final.match(/\d+|\D+/g) ?? [];
+          const DURATION = 1200;
+          let start = 0;
+          // Une seule animation par élément : la nouvelle annule la précédente
+          // (sinon deux boucles rAF se disputeraient le texte).
+          cancelAnimationFrame((el as any).__cuRaf ?? 0);
+          const step = (t: number) => {
+            if (!start) start = t;
+            const p = Math.min((t - start) / DURATION, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = parts
+              .map((seg) => {
+                if (!/^\d/.test(seg)) return seg;
+                const shown = String(Math.round(parseInt(seg, 10) * eased));
+                return seg.startsWith("0") ? shown.padStart(seg.length, "0") : shown;
+              })
+              .join("");
+            if (p < 1) (el as any).__cuRaf = requestAnimationFrame(step);
+            else el.textContent = final;
+          };
+          (el as any).__cuRaf = requestAnimationFrame(step);
+        };
+        // Exposé aux pages : la page détail relance l'animation quand le
+        // cartouche change de valeurs (clic sur un jour) — y compris quand
+        // les spans .stat-count ont déjà été remplacés (deep-link #jN).
+        (window as any).statCountUp = countUp;
+        if (counters.length) {
+          const io = new IntersectionObserver(
+            (entries) => {
+              for (const e of entries) {
+                if (e.isIntersecting) {
+                  io.unobserve(e.target);
+                  countUp(e.target as HTMLElement);
+                }
+              }
+            },
+            { threshold: 0.4 }
+          );
+          counters.forEach((el) => io.observe(el));
+        }
+      }
     </script>
   </body>
 </html>

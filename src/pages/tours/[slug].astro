@@ -129,7 +129,7 @@ const transferModes = tour.transferModes ?? [];
           ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""}`}
           >
             <dd class={`font-mono text-xl font-medium ${accent} sm:text-2xl`}>
-              {value}
+              <span class="stat-count">{value}</span>
             </dd>
             <dt class="font-mono mt-0.5 text-[9px] uppercase tracking-[0.18em] text-navy">
               {label}
@@ -358,36 +358,65 @@ const transferModes = tour.transferModes ?? [];
       document.getElementById("day-stats-data")!.textContent!,
     );
     const cells = document.querySelectorAll("#edition-stats > div");
-    const setStats = (rows: [string | number, string][], color?: string) =>
+    const setStats = (rows: [string | number, string][], color?: string, animate = true) =>
       rows.forEach(([value, label], i) => {
         const dd = cells[i].querySelector("dd")!;
         dd.textContent = String(value);
         dd.style.color = color ?? "";
         cells[i].querySelector("dt")!.textContent = label;
+        // Même défilement 0 → valeur qu'au premier affichage (défini dans
+        // Base ; absent si prefers-reduced-motion).
+        if (animate) (window as any).statCountUp?.(dd);
       });
+    const animateStats = () =>
+      cells.forEach((c) => (window as any).statCountUp?.(c.querySelector("dd")!));
     const buttons = [...document.querySelectorAll<HTMLElement>("[data-zoom-day]")];
     const selectDay = (n: number, scroll = true) => {
       buttons.forEach((b) => b.classList.toggle("border-navy", +b.dataset.zoomDay! === n));
       buttons.forEach((b) => b.classList.toggle("bg-paper-deep", +b.dataset.zoomDay! === n));
       const d = dayStats.find((x: any) => x.n === n);
+      // Si le cartouche n'est pas visible (clic depuis la carte, plus bas),
+      // remonter jusqu'à lui — via Lenis quand il est actif (un scrollIntoView
+      // natif se ferait rattraper par sa position interne), et ne jouer le
+      // défilement des compteurs qu'à l'arrivée, pour qu'il soit visible.
+      const stats = document.getElementById("edition-stats")!;
+      const r = stats.getBoundingClientRect();
+      const needScroll = scroll && (r.top < 0 || r.bottom > innerHeight);
       setStats(
         d
           ? [[d.distanceKm, "km"], [d.gainM, "m dénivelé +"], [formatHours(d.movingS), "effort"], [formatHours(d.elapsedS), "au total"]]
           : [[totals.distanceKm, "km"], [totals.days, "jours"], [totals.gainM, "m dénivelé +"], [formatHours(totals.movingS), "effort"]],
         d?.color,
+        !needScroll,
       );
       history.replaceState(null, "", n > 0 ? dayHash(n) : location.pathname + location.search);
-      // Si le cartouche n'est pas visible (clic depuis la carte, plus bas),
-      // remonter en douceur jusqu'à lui.
-      const stats = document.getElementById("edition-stats")!;
-      const r = stats.getBoundingClientRect();
-      if (scroll && (r.top < 0 || r.bottom > innerHeight)) {
-        stats.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (needScroll) {
+        const lenis = (window as any).lenis;
+        if (lenis) {
+          const offset = -(parseFloat(getComputedStyle(stats).scrollMarginTop) || 0);
+          // Compteurs joués à l'arrivée. Filet setTimeout : onComplete peut ne
+          // pas se déclencher (cible déjà quasi atteinte, molette pendant le
+          // scroll) — une seule exécution dans tous les cas.
+          let played = false;
+          const play = () => {
+            if (played) return;
+            played = true;
+            animateStats();
+          };
+          lenis.scrollTo(stats, { offset, duration: 0.9, onComplete: play });
+          setTimeout(play, 1000);
+        } else {
+          stats.scrollIntoView({ behavior: "smooth", block: "start" });
+          animateStats();
+        }
       }
     };
     buttons.forEach((btn) => btn.addEventListener("click", () => selectDay(+btn.dataset.zoomDay!)));
     const initial = parseDayHash(location.hash);
-    if (initial != null && dayStats.some((d: any) => d.n === initial)) selectDay(initial, false);
+    // Différé d'un tick : ce script s'exécute avant celui de Base (ordre du
+    // document), or selectDay anime via window.statCountUp, défini par Base.
+    if (initial != null && dayStats.some((d: any) => d.n === initial))
+      setTimeout(() => selectDay(initial, false), 0);
     // ESC : retour à la vue complète (carte, stats, hash) — sauf si une boîte
     // de dialogue (lightbox) est ouverte : son ESC natif la ferme, sans plus.
     document.addEventListener("keydown", (e) => {
@@ -399,9 +428,11 @@ const transferModes = tour.transferModes ?? [];
 
   <script>
     const btn = document.getElementById("back-to-top")!;
-    btn.addEventListener("click", () =>
-      window.scrollTo({ top: 0, behavior: "smooth" }),
-    );
+    btn.addEventListener("click", () => {
+      const lenis = (window as any).lenis;
+      if (lenis) lenis.scrollTo(0);
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+    });
     const toggle = () => {
       btn.style.display = window.scrollY < 600 ? "none" : "flex";
     };
