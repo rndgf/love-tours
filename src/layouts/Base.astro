@@ -38,7 +38,7 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
     </div>
     <!-- Desktop : header épinglé en haut au scroll (mobile : la nav des années
          de la homepage occupe déjà le haut d'écran). -->
-    <header class="border-b-2 border-navy bg-paper/80 sm:sticky sm:top-0 sm:z-30 sm:backdrop-blur-sm">
+    <header class="border-b border-navy bg-paper/80 sm:sticky sm:top-0 sm:z-30 sm:backdrop-blur-sm">
       <nav class="mx-auto flex max-w-6xl items-center justify-center px-4 py-4 sm:justify-between sm:px-6 sm:py-5">
         <a href="/" class="flex items-center gap-2.5">
           <!-- Picto : roue de vélo + cœur, sentier pointillé (rando) -->
@@ -52,7 +52,7 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
             </span>
           </span>
         </a>
-        <p class="font-mono hidden text-[11px] uppercase tracking-[0.18em] text-navy sm:block">
+        <p class="font-mono hidden text-[10px] uppercase tracking-[0.18em] text-navy sm:block">
           Atlas de nos étés · {firstYear}–{lastYear}
         </p>
       </nav>
@@ -97,7 +97,7 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
       >
         <LogoMark class="h-14 w-14" />
       </span>
-      <div class="mx-auto flex max-w-6xl flex-wrap items-baseline justify-center gap-x-4 gap-y-1.5 px-4 pb-5 pt-11 text-center sm:px-6">
+      <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 pb-5 pt-11 text-center sm:px-6">
         <p class="text-sm text-ink-soft">Un été sur deux à vélo, l'autre à pied — toujours à deux. <span class="text-carmin">❤</span></p>
         <p class="font-mono text-[10px] uppercase tracking-[0.18em] text-navy">
           {firstYear}–{lastYear} · Site par <a href="https://www.renaudgouffe.fr/" target="_blank" rel="noopener" class="underline decoration-navy/30 underline-offset-2 transition hover:text-carmin">rndgf</a>

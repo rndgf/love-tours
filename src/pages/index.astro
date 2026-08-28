@@ -22,10 +22,10 @@ const firstYear = Math.min(...tours.map((t) => t.year));
 <Base title="Love Tours ❤ — nos étés à deux">
   <!-- Héro -->
   <section
-    class="mx-auto max-w-6xl px-4 pb-10 pt-12 text-center sm:px-6 sm:pb-14 sm:pt-24"
+    class="relative mx-auto max-w-6xl px-4 pb-10 pt-12 text-center sm:px-6 sm:pb-14 sm:pt-24"
   >
     <p
-      class="font-mono text-[11px] font-medium uppercase tracking-[0.3em] text-carmin"
+      class="font-mono text-[10px] font-medium uppercase tracking-[0.3em] text-carmin"
     >
       depuis {firstYear}
     </p>
@@ -56,7 +56,7 @@ const firstYear = Math.min(...tours.map((t) => t.year));
             <dd class="font-mono text-2xl font-medium text-carmin sm:text-3xl">
               {value}{unit && <span class="text-base sm:text-lg">{unit}</span>}
             </dd>
-            <dt class="font-mono mt-1 text-[10px] uppercase tracking-[0.18em] text-navy">
+            <dt class="font-mono mt-1 text-[9px] uppercase tracking-[0.18em] text-navy">
               {label}
             </dt>
           </div>
@@ -154,7 +154,7 @@ const firstYear = Math.min(...tours.map((t) => t.year));
                   >
                     {tour.year}
                   </span>
-                  <p class="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-navy">
+                  <p class="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-navy">
                     {tour.mode}
                     {tour.country && ` · ${tour.country}`}
                   </p>
@@ -191,8 +191,8 @@ const firstYear = Math.min(...tours.map((t) => t.year));
                           {extra === "dot" && <circle cx="2" cy="12" r="1.2" class="fill-navy" stroke="none" />}
                           <path d={icon} />
                         </svg>
-                        <div class={`text-[15px] font-medium ${accent}`}>{value}</div>
-                        <div class="mt-0.5 text-[9px] uppercase tracking-[0.14em] text-navy">{label}</div>
+                        <div class={`text-[12px] font-medium ${accent}`}>{value}</div>
+                        <div class="mt-0.5 text-[8px] uppercase tracking-[0.14em] text-navy">{label}</div>
                       </div>
                     ))}
                   </div>

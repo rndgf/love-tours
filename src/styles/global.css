@@ -20,6 +20,14 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Desktop : échelle globale à 90 % (typo + espacements en rem), rendu plus
+   fin, façon planche gravée. Mobile : base 16 px conservée (lisibilité). */
+@media (min-width: 640px) {
+  html {
+    font-size: 90%;
+  }
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);

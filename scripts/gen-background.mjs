@@ -13,7 +13,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isBike } from "../src/lib/mode.js";
-import { HOME as HOME_COORD } from "./lib/home.mjs";
 import { hypsoBands } from "./lib/terrain.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -30,8 +29,6 @@ for (const f of ["coast10.geojson", "rivers10.geojson"]) {
   }
 }
 
-// Maison : Sotteville-lès-Rouen (constante partagée avec les edition.json via "home").
-const HOME = { lon: HOME_COORD[0], lat: HOME_COORD[1] };
 
 // Centre de la vue : milieu de l'étendue globale des traces (union des bbox
 // des 5 éditions) — le dessin est ainsi visuellement centré, la maison reste
@@ -216,7 +213,6 @@ for (const f of fs.readdirSync(path.join(ROOT, "public/tours")).filter((f) => f.
 }
 
 const vbW = Math.round(W * SCALE), vbH = Math.round(H * SCALE);
-const hx = px(HOME.lon), hy = py(HOME.lat);
 
 const svg = `<svg class="h-full w-full text-navy" viewBox="0 0 ${vbW} ${vbH}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
   <rect width="${vbW}" height="${vbH}" fill="#3f7fb5" fill-opacity="0.07" />
@@ -237,10 +233,6 @@ ${bikePaths.map((d) => `    <path d="${d}" />`).join("\n")}
   </g>
   <g fill="none" stroke="var(--color-sapin)" stroke-width="2.2" stroke-linecap="round" opacity="0.12">
 ${hikePaths.map((d) => `    <path d="${d}" />`).join("\n")}
-  </g>
-  <g opacity="0.2" stroke="var(--color-carmin)" fill="none" stroke-width="1.5">
-    <circle cx="${hx}" cy="${hy}" r="6" />
-    <path d="M${hx - 12},${hy} h6 M${+hx + 6},${hy} h6 M${hx},${hy - 12} v6 M${hx},${+hy + 6} v6" />
   </g>
 </svg>
 `;
