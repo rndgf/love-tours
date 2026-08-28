@@ -22,6 +22,9 @@ const firstYear = Math.min(...tours.map((t) => t.year));
 // Pictos du « voyageur » qui parcourt la timeline au scroll (desktop).
 const riderBike = moveIcon("vélo");
 const riderHike = moveIcon("à pied");
+// Inclinaisons des tirages photo (déterministes par position : album collé
+// à la main, jamais parfaitement droit).
+const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
 ---
 
 <Base title="Love Tours ❤ · nos étés à deux">
@@ -244,17 +247,36 @@ const riderHike = moveIcon("à pied");
                   </div>
                 </div>
                 {cover && (
-                  <div class="relative hidden self-center overflow-hidden sm:block">
-                    <Image
-                      src={cover}
-                      width={560}
-                      widths={[280, 560]}
-                      sizes="210px"
-                      alt=""
-                      loading={ti === 0 ? "eager" : "lazy"}
-                      fetchpriority={ti === 0 ? "high" : "auto"}
-                      class="aspect-square w-full object-cover"
-                    />
+                  <div class="hidden self-center sm:block">
+                    <!-- Tirage d'album : photo légèrement de travers (collée à
+                         la main), tenue par quatre coins blancs — la carte
+                         fait office de page d'album. Les coins tournent avec
+                         le tirage (physiquement, ils le tiennent). -->
+                    <div class="relative" style={`transform: rotate(${TILTS[ti % TILTS.length]}deg)`}>
+                      <div class="border border-navy/15 bg-white p-1.5 shadow-sm shadow-navy/10">
+                        <Image
+                          src={cover}
+                          width={560}
+                          widths={[280, 560]}
+                          sizes="210px"
+                          alt=""
+                          loading={ti === 0 ? "eager" : "lazy"}
+                          fetchpriority={ti === 0 ? "high" : "auto"}
+                          class="aspect-square w-full object-cover"
+                        />
+                      </div>
+                      {[
+                        "left-[-3px] top-[-3px]",
+                        "right-[-3px] top-[-3px] rotate-90",
+                        "right-[-3px] bottom-[-3px] rotate-180",
+                        "left-[-3px] bottom-[-3px] -rotate-90",
+                      ].map((pos) => (
+                        <span aria-hidden="true" class={`pointer-events-none absolute h-6 w-6 ${pos}`}>
+                          <span class="absolute inset-0 bg-navy/25 [clip-path:polygon(0_0,100%_0,0_100%)]" />
+                          <span class="absolute inset-0 bg-white [clip-path:polygon(0_0,calc(100%_-_1.5px)_0,0_calc(100%_-_1.5px))]" />
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </a>
@@ -335,6 +357,8 @@ const riderHike = moveIcon("à pied");
       });
       if (rider && tlLerp) {
         rider.style.visibility = cur ? "visible" : "hidden";
+        // L'année en regard du voyageur prend l'effet hover (accent + zoom).
+        items.forEach((li) => li.classList.toggle("is-current", li === cur));
         if (cur) {
           tlLerp.to(clamp(center - rect.top, PAD, rect.height - PAD));
           setIcon(rider, cur.dataset.mode);

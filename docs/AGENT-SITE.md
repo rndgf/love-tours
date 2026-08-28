@@ -187,8 +187,10 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 - **Masqués quand aucune carte n'est en regard** (pas de picto par défaut
   qui recouvrirait la flèche du fil — exigence explicite).
 - La carte « en regard » = celle dont la zone verticale (±16 px) contient
-  le centre du viewport. Même détection pour l'année active de la nav
-  mobile (fond à l'accent du mode, texte papier).
+  le centre du viewport. Même détection pour l'année active : nav mobile
+  (fond à l'accent du mode, texte papier) et, en desktop, classe
+  `is-current` sur le `<li>` → l'année et le point du fil prennent l'effet
+  hover (accent + zoom).
 
 ### 5.4 Divers
 

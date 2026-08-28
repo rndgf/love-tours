@@ -196,7 +196,7 @@ neutralise tout (cf. AGENT-SITE.md §6).
 | Sentier qui défile (`seal-walk`) | hover/focus du logo | `stroke-dashoffset` 0→−5.5 (une période) linéaire 0,7 s |
 | « & » → cœur | hover du logo header | fondu croisé 0,25 s entre `&` et `❤︎` (U+2764 + VS15, même framboise), le cœur bat |
 | Voyageurs timeline | scroll | traîne lerp 12 %/frame, arrêt < 0,5 px ; masqués hors cartes |
-| Année active (hover desktop) | hover carte | année `scale 1.1` (origine droite) + couleur accent, point `scale 1.5` + fond accent, transitions 0,3 s (propriété `scale`, compose avec `translate`) |
+| Année active (desktop) | hover carte **ou** passage du voyageur (classe `is-current`, même détection centre-viewport) | année `scale 1.1` (origine droite) + couleur accent, point `scale 1.5` + fond accent, transitions 0,3 s (propriété `scale`, compose avec `translate`) |
 | Année active (mobile) | scroll | fond accent + texte papier sur le lien de la nav (transition Tailwind 150 ms) |
 | Compteurs de stats | apparition / choix d'un jour | 0 → valeur, 1 200 ms, décélération cubique (détails AGENT-SITE.md §5.2) |
 | Scroll lissé | molette ≥ 640 px | Lenis `{ autoRaf, anchors }`, scrollTo `duration: 0.9` vers le cartouche |
@@ -211,6 +211,12 @@ neutralise tout (cf. AGENT-SITE.md §6).
   marge gauche : rail à `-3.25rem`, année à `-8.25rem`, largeur 16).
 - Grille de carte HP desktop : `sm:grid-cols-[210px_1fr_210px]`
   (minimap / texte / photo carrée) ; sans photo `[230px_1fr]`.
+- Photo de carte HP desktop : **tirage d'album** — photo en retrait sur fond
+  blanc (`p-1.5`, bordure `navy/15`, ombre `shadow-sm navy/10`), tenue par
+  quatre coins blancs (double triangle `clip-path`, liseré `navy/25` de
+  1,5 px sur l'hypoténuse, débord 3 px), le tout incliné par carte
+  (rotations déterministes −1,5/+1,2/−0,9/+1,6/−1,2° cycliques — album
+  collé à la main). Mobile : cover bord à bord sans coins ni rotation.
 - Rythme vertical : sections `mt-10 sm:mt-12` à `mt-14 sm:mt-16`,
   cartes espacées `space-y-8`, journal `space-y-7 sm:space-y-9`.
 - Header : bordure basse 1 px navy, `bg-paper/80` + `backdrop-blur-sm`,
