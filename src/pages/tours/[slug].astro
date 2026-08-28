@@ -11,7 +11,8 @@ import {
   stageName,
 } from "../../lib/tours.js";
 import { dayColor } from "../../lib/palette.js";
-import { accentText, accentHover } from "../../lib/mode.js";
+import { accentText, accentHover, moveIcon } from "../../lib/mode.js";
+import { ICONS } from "../../lib/pictos.js";
 
 export function getStaticPaths() {
   return tours.map((tour, i) => ({
@@ -21,6 +22,8 @@ export function getStaticPaths() {
 }
 const { tour, older, newer } = Astro.props;
 const accent = accentText(tour.mode);
+// Picto « en mouvement » : vélo ou marcheur selon le mode de l'édition.
+const move = moveIcon(tour.mode);
 // Survol des liens de navigation : accent de l'édition CIBLE (carmin vélo, sapin à pied)
 const hoverAccent = (t) => accentHover(t.mode);
 
@@ -119,7 +122,7 @@ const transferModes = tour.transferModes ?? [];
           [tour.totals.distanceKm, "km"],
           [tour.totals.days, "jours"],
           [tour.totals.gainM, "m dénivelé +"],
-          [formatHours(tour.totals.movingS), "en mouvement"],
+          [formatHours(tour.totals.movingS), "effort"],
         ].map(([value, label], i) => (
           <div
             class={`border-navy/20 px-2 py-3 text-center sm:px-4 sm:py-4
@@ -228,29 +231,26 @@ const transferModes = tour.transferModes ?? [];
               {!day.noTrace && (
                 <p class="font-mono mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-navy sm:hidden">
                   <span class="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="stroke-navy" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
-                      <path d="M2 12 C5 8 7 13 10 9 S14 5 14 4" />
-                      <circle cx="2" cy="12" r="1.2" class="fill-navy" stroke="none" />
-                      <path d="M11.5 4 H14 V6.5" />
+                    <svg width="14" height="14" viewBox={ICONS.route.viewBox} preserveAspectRatio="xMidYMax meet" fill="none" aria-hidden="true">
+                      <path d={ICONS.route.d} class="fill-navy" />
                     </svg>
                     <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{day.distanceKm}</strong>km</span>
                   </span>
                   <span class="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="stroke-navy" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M1.5 13 L6 5.5 L8.5 9.5 L11 6 L14.5 13 Z" />
+                    <svg width="14" height="14" viewBox={ICONS.mountain.viewBox} preserveAspectRatio="xMidYMax meet" fill="none" aria-hidden="true">
+                      <path d={ICONS.mountain.d} class="fill-navy" />
                     </svg>
                     <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{day.gainM}m</strong>D+</span>
                   </span>
                   <span class="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="stroke-navy" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
-                      <path d="M2.5 12 a5.5 5.5 0 1 1 11 0 M8 12 L11.2 8.2" />
+                    <svg width="14" height="14" viewBox={move.viewBox} preserveAspectRatio="xMidYMax meet" fill="none" aria-hidden="true">
+                      <path d={move.d} class="fill-navy" />
                     </svg>
                     <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{formatHours(day.movingS)}</strong></span>
                   </span>
                   <span class="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="stroke-navy" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
-                      <circle cx="8" cy="8" r="6" />
-                      <path d="M8 4.5 V8 L10.5 9.5" />
+                    <svg width="14" height="14" viewBox={ICONS.clock.viewBox} preserveAspectRatio="xMidYMax meet" fill="none" aria-hidden="true">
+                      <path d={ICONS.clock.d} class="fill-navy" />
                     </svg>
                     <span><strong class="font-medium" style={`color:${dayColor(day.n)}`}>{formatHours(day.elapsedS)}</strong></span>
                   </span>
@@ -260,16 +260,16 @@ const transferModes = tour.transferModes ?? [];
             {!day.noTrace && (
               <div class="font-mono hidden shrink-0 self-center sm:flex">
                 {[
-                  [`${day.distanceKm}km`, "distance", "M2 12 C5 8 7 13 10 9 S14 5 14 4 M11.5 4 H14 V6.5", "dot"],
-                  [`${day.gainM}mD+`, "dénivelé", "M1.5 13 L6 5.5 L8.5 9.5 L11 6 L14.5 13 Z", ""],
-                  [formatHours(day.movingS), "en mouvement", "M2.5 12 a5.5 5.5 0 1 1 11 0 M8 12 L11.2 8.2", ""],
-                  [formatHours(day.elapsedS), "au total", "M8 4.5 V8 L10.5 9.5", "clock"],
-                ].map(([value, label, icon, extra], i) => (
+                  [`${day.distanceKm}km`, "distance", ICONS.route.d, "fa", ICONS.route.viewBox],
+                  [`${day.gainM}mD+`, "dénivelé", ICONS.mountain.d, "fa", ICONS.mountain.viewBox],
+                  [formatHours(day.movingS), "effort", move.d, "fa", move.viewBox],
+                  [formatHours(day.elapsedS), "au total", ICONS.clock.d, "fa", ICONS.clock.viewBox],
+                ].map(([value, label, icon, extra, vb], i) => (
                   <div class={`px-3.5 text-center ${i > 0 ? "border-l border-navy/20" : ""}`}>
                     <svg
                       width="14"
                       height="14"
-                      viewBox="0 0 16 16"
+                      viewBox={vb ?? "0 0 16 16"} preserveAspectRatio="xMidYMax meet"
                       fill="none"
                       class="stroke-navy mx-auto mb-1"
                       stroke-width="1.3"
@@ -277,9 +277,9 @@ const transferModes = tour.transferModes ?? [];
                       stroke-linejoin="round"
                       aria-hidden="true"
                     >
-                      {extra === "dot" && <circle cx="2" cy="12" r="1.2" class="fill-navy" stroke="none" />}
+                      {extra === "dot" && <circle cx="2.5" cy="13" r="1.2" class="fill-navy" stroke="none" />}
                       {extra === "clock" && <circle cx="8" cy="8" r="6" />}
-                      <path d={icon} />
+                      <path d={icon} {...(extra === "fa" ? { class: "fill-navy", stroke: "none" } : {})} />
                     </svg>
                     <div class="text-[12px] font-medium" style={`color:${dayColor(day.n)}`}>{value}</div>
                     <div class="mt-0.5 text-[8px] uppercase tracking-[0.14em] text-navy">{label}</div>
@@ -372,8 +372,8 @@ const transferModes = tour.transferModes ?? [];
       const d = dayStats.find((x: any) => x.n === n);
       setStats(
         d
-          ? [[d.distanceKm, "km"], [d.gainM, "m dénivelé +"], [formatHours(d.movingS), "en mouvement"], [formatHours(d.elapsedS), "au total"]]
-          : [[totals.distanceKm, "km"], [totals.days, "jours"], [totals.gainM, "m dénivelé +"], [formatHours(totals.movingS), "en mouvement"]],
+          ? [[d.distanceKm, "km"], [d.gainM, "m dénivelé +"], [formatHours(d.movingS), "effort"], [formatHours(d.elapsedS), "au total"]]
+          : [[totals.distanceKm, "km"], [totals.days, "jours"], [totals.gainM, "m dénivelé +"], [formatHours(totals.movingS), "effort"]],
         d?.color,
       );
       history.replaceState(null, "", n > 0 ? dayHash(n) : location.pathname + location.search);
