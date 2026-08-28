@@ -36,7 +36,9 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
     <div class="pointer-events-none fixed inset-0 -z-10" aria-hidden="true">
       <BackgroundMap />
     </div>
-    <header class="border-b-2 border-navy">
+    <!-- Desktop : header épinglé en haut au scroll (mobile : la nav des années
+         de la homepage occupe déjà le haut d'écran). -->
+    <header class="border-b-2 border-navy sm:sticky sm:top-0 sm:z-30 sm:bg-paper/95 sm:backdrop-blur-sm">
       <nav class="mx-auto flex max-w-6xl items-center justify-center px-4 py-4 sm:justify-between sm:px-6 sm:py-5">
         <a href="/" class="flex items-center gap-2.5">
           <!-- Picto : roue de vélo + cœur, sentier pointillé (rando) -->
