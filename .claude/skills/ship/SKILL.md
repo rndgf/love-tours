@@ -6,7 +6,13 @@ description: Commit + push + déploiement Cloudflare Pages en une commande
 Livre le travail en cours : commit, push, déploiement. L'invocation de cette
 commande vaut accord explicite de déploiement (règle CLAUDE.md respectée).
 
-Étapes, dans l'ordre — s'arrêter et le signaler si l'une échoue :
+Étapes, dans l'ordre — s'arrêter et le signaler si l'une échoue.
+IMPORTANT : exécuter push et deploy dans des commandes SÉPARÉES et vérifier
+le succès du push (sortie sans « error »/« denied ») avant de déployer — ne
+jamais enchaîner `git push | tail && npm run deploy` (le pipe masque le code
+d'erreur du push). Si le push échoue avec « Permission denied (publickey) » :
+l'agent SSH est 1Password — demander à l'utilisateur de le déverrouiller, ne
+pas déployer.
 
 1. `git status` puis `git diff` (aperçu) pour comprendre ce qui part.
    S'il n'y a **aucun changement**, le dire et s'arrêter (ne pas déployer pour rien).
