@@ -148,7 +148,8 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 ### 4.2 bis Pages annexes
 
 - **`/a-propos/`** : même gabarit d'en-tête que les pages d'édition
-  (filigrane ❤, kicker, H1, prose) + portrait « en civil » en couleur au
+  (filigrane cœur **en SVG** — jamais le caractère ❤ : iOS le rend en émoji
+  rouge vif en ignorant couleur et opacité —, kicker, H1, prose) + portrait « en civil » en couleur au
   format **polaroid** (composant `Polaroid.astro` : carte 88×107 mm — bords
   5 %, marge basse 26 % —, recadrage carré `object-top`, incliné 2,6°,
   ombre douce), légende manuscrite « Mélanie & Renaud » en **Rock Salt**

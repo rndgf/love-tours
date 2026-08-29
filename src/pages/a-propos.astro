@@ -18,16 +18,25 @@ const portrait =
 ---
 
 <Base
-  title="À propos · Love Tours ❤"
+  title="À propos · Love Tours"
   description="Ce qu'est cet atlas, pourquoi il existe et comment il est fabriqué."
 >
   <section class="mx-auto max-w-6xl px-4 pb-8 pt-10 sm:px-6 sm:pb-10 sm:pt-20">
     <div class="relative">
-      <span
+      <!-- Filigrane cœur en SVG (tracé du favicon) : un caractère ❤ serait
+           rendu en émoji rouge vif sur iOS, qui ignore couleur et opacité. -->
+      <div
         aria-hidden="true"
-        class="font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center text-[7rem] font-semibold leading-none tracking-tight text-navy/[0.045] sm:text-[13rem]"
-        >❤</span
+        class="pointer-events-none absolute inset-0 flex select-none items-center justify-center"
       >
+        <svg viewBox="8 11.5 20 16.5" class="h-[7rem] w-auto sm:h-[12rem]">
+          <path
+            d="M18 27.5 C10.2 21.4 8.2 16.6 12 13.2 C14.7 10.8 17.45 12.8 18 14.9 C18.55 12.8 21.3 10.8 24 13.2 C27.8 16.6 25.8 21.4 18 27.5 Z"
+            fill="#1e2f4d"
+            fill-opacity="0.045"
+          />
+        </svg>
+      </div>
       <div
         class="grid gap-10 sm:grid-cols-[1fr_300px] sm:items-center sm:gap-14"
       >
