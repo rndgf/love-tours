@@ -108,7 +108,12 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
    `voyages` (compte), `km à vélo` et `km à pied` (sommes par mode,
    séparées exprès — ne jamais fusionner), `jours dehors` (desktop
    seulement), `de dénivelé +`. Mobile : 4 cellules en 2×2.
-3. **Nav des années** (mobile uniquement, sticky en haut) : liens `#y<année>`
+3. **Nav des années** (mobile uniquement, sticky en haut) : **invisible au
+   repos** (`visibility/opacity`, hors parcours clavier — elle reste dans le
+   flux pour le sticky, ses marges sont compensées : écart cartouche → 1ʳᵉ
+   carte ≈ 60 px) et apparaît en fondu + glissement 0,3 s quand elle colle
+   (`is-pinned`). Bordure basse en onde permanente, fond découpé le long de
+   la courbe, pas de bordure haute. Liens `#y<année>`
    sur **une seule ligne à défilement horizontal** (barre masquée, liens
    centrés tant que ça tient, année active recentrée automatiquement au
    scroll de page), année active mise en évidence, voyageur miniature

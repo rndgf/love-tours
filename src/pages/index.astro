@@ -70,11 +70,11 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
   <nav
     id="year-nav"
     aria-label="Aller à une année"
-    class="font-mono sticky top-0 z-20 mt-10 border-y border-navy sm:hidden"
+    class="font-mono sticky top-0 z-20 mt-2 sm:hidden"
   >
     <!-- Une seule ligne : défilement horizontal (barre masquée), liens
          centrés tant que ça tient (marges auto aux extrémités). -->
-    <div class="yn-scroll mx-auto flex max-w-6xl gap-x-1 overflow-x-auto px-4 py-2.5 sm:px-6">
+    <div class="yn-scroll mx-auto flex max-w-6xl gap-x-1 overflow-x-auto px-4 pb-4 pt-2.5 sm:px-6">
       {
         tours.map((tour) => (
           <a
@@ -106,7 +106,7 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
   <!-- Planches des éditions, sur le fil des années -->
   <!-- pb desktop : marge de scroll sous la dernière carte (2021) pour que le
        voyageur de la timeline puisse descendre jusqu'en bas du fil. -->
-  <section class="mx-auto mt-10 max-w-6xl px-4 sm:mt-12 sm:px-6 min-[1400px]:pb-12">
+  <section class="mx-auto mt-0 max-w-6xl px-4 sm:mt-12 sm:px-6 min-[1400px]:pb-12">
     <ol id="timeline" class="relative space-y-8">
       <div
         aria-hidden="true"
@@ -151,7 +151,7 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
               />
               <a
                 href={`/tours/${tour.slug}/`}
-                class={`group relative grid gap-5 overflow-hidden border border-navy/40 bg-white/75 p-4 transition hover:border-navy hover:shadow-lg hover:shadow-navy/5 sm:gap-6 sm:p-7 ${cover ? "sm:grid-cols-[210px_1fr_210px]" : "sm:grid-cols-[230px_1fr]"}`}
+                class={`group relative grid gap-5 overflow-hidden border border-navy/40 bg-white/75 p-4 shadow-md shadow-navy/10 transition hover:border-navy sm:gap-6 sm:p-7 sm:shadow-none sm:hover:shadow-lg sm:hover:shadow-navy/5 ${cover ? "sm:grid-cols-[210px_1fr_210px]" : "sm:grid-cols-[230px_1fr]"}`}
               >
                 {cover && (
                   <div class="relative -mx-4 -mt-4 sm:hidden">

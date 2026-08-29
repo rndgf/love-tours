@@ -118,17 +118,14 @@ export function initTimeline(): void {
   const nav = document.getElementById("year-nav");
   const navRider = document.getElementById("yn-rider");
   const links = nav ? [...nav.querySelectorAll<HTMLElement>(".yn-link")] : [];
-  // Position du voyageur mobile : x le long de la nav, et y qui suit l'onde
-  // de la bordure basse quand la nav est collée (classe .is-stuck).
-  // transform (composité, sous-pixel) plutôt que left/margin (layout à
-  // chaque frame → saccades) ; se compose avec le translate -50%/-50% des
-  // classes (propriété `translate`, appliquée avant `transform`).
-  let navX = 0;
+  // Position du voyageur mobile : x le long de la nav, y qui suit l'onde de
+  // la bordure basse (permanente). transform (composité, sous-pixel) plutôt
+  // que left/margin (layout à chaque frame → saccades) ; se compose avec le
+  // translate -50%/-50% des classes (propriété `translate`, appliquée avant
+  // `transform`).
   const applyNavRider = (x: number) => {
     if (!navRider) return;
-    navX = x;
-    const y = nav?.classList.contains("is-stuck") ? waveOffset(x) : 0;
-    navRider.style.transform = `translate(${x}px, ${y}px)`;
+    navRider.style.transform = `translate(${x}px, ${waveOffset(x)}px)`;
   };
   const navSpring = navRider ? makeSpring(applyNavRider) : null;
   let lastActive: HTMLElement | null = null;
@@ -173,17 +170,8 @@ export function initTimeline(): void {
 
     // — Mobile : nav des années —
     if (nav && navRider && navSpring && nav.offsetWidth) {
-      // Collée en haut : la bordure basse devient l'onde (voir global.css),
-      // le voyageur en suit la courbe. Ré-application immédiate : le spring
-      // ne rejoue pas apply() si le voyageur est immobile au basculement.
-      const wasStuck = nav.classList.contains("is-stuck");
       // Réellement collée en haut : ombre renforcée + fond plus opaque.
       nav.classList.toggle("is-pinned", nav.getBoundingClientRect().top <= 0.5);
-      const isStuck = nav.classList.contains("is-pinned");
-      if (isStuck !== wasStuck) {
-        nav.classList.toggle("is-stuck", isStuck);
-        applyNavRider(navX);
-      }
       links.forEach((l) =>
         l.classList.toggle("is-active", !!cur && l.dataset.year === cur.id.slice(1)),
       );
@@ -197,9 +185,7 @@ export function initTimeline(): void {
           behavior: "smooth",
         });
       }
-      // Le voyageur n'apparaît qu'avec l'onde (nav collée) : pas de picto
-      // posé sur la bordure rectiligne au repos.
-      navRider.style.visibility = cur && isStuck ? "visible" : "hidden";
+      navRider.style.visibility = cur ? "visible" : "hidden";
       if (cur) {
         const p = clamp((center - rect.top) / rect.height, 0, 1);
         navSpring.to(NAV_PAD + p * (nav.offsetWidth - 2 * NAV_PAD));

@@ -73,7 +73,8 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
       <slot />
     </main>
 
-    <footer class="relative mt-16 bg-paper/80 sm:mt-24">
+    <!-- Ombre vers le haut : détache le footer du fond de carte -->
+    <footer class="relative mt-16 bg-paper/80 shadow-[0_-4px_12px_rgba(30,47,77,0.1)] sm:mt-24">
       <!-- Bordure haute en trois morceaux : deux segments + arc qui épouse le
            médaillon sans l'entourer. -->
       {
