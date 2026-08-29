@@ -36,6 +36,11 @@
   }
 }
 
+/* Aucune règle overflow sur html/body : elles cassent les position:sticky
+   dans Chrome (bug vécu : nav des années décrochée). Le débordement
+   horizontal se corrige à la source (fond de carte en absolute+sticky,
+   jamais en fixed — un fixed inset-0 s'étend sous la barre de défilement
+   et ouvre 20 px de balayage latéral). */
 body {
   background: var(--color-paper);
   color: var(--color-ink);

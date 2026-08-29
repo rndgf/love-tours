@@ -172,12 +172,6 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
                 href={`/tours/${tour.slug}/`}
                 class={`group relative grid gap-5 overflow-hidden border border-navy/40 bg-white/75 p-4 transition hover:border-navy hover:shadow-lg hover:shadow-navy/5 sm:gap-6 sm:p-7 ${cover ? "sm:grid-cols-[210px_1fr_210px]" : "sm:grid-cols-[230px_1fr]"}`}
               >
-                <span
-                  aria-hidden="true"
-                  class="font-display pointer-events-none absolute inset-0 hidden select-none items-center justify-center text-[11rem] font-semibold leading-none tracking-tight text-navy/[0.045] sm:flex"
-                >
-                  {tour.year}
-                </span>
                 {cover && (
                   <div class="relative -mx-4 -mt-4 sm:hidden">
                     <Image
@@ -198,12 +192,6 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
                   class="relative mx-auto hidden w-44 self-center sm:block sm:w-full"
                 />
                 <div class="relative flex flex-col justify-center">
-                  <span
-                    aria-hidden="true"
-                    class="font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center text-[6.5rem] font-semibold leading-none tracking-tight text-navy/[0.045] sm:hidden"
-                  >
-                    {tour.year}
-                  </span>
                   <p class="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-navy">
                     {tour.mode}
                     {tour.country && ` · ${tour.country}`}
@@ -291,22 +279,28 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
 <script>
   // Voyageurs de la timeline — desktop : le long du fil vertical ; mobile :
   // sur la bordure basse de la nav des années (avec lien de l'année active).
-  // Les deux suivent le centre du viewport avec une petite traîne (rattrapage
-  // à 12 % de l'écart par image, arrêt net sous 0,5 px), picto et couleur du
-  // mode de la carte en regard, masqués hors des cartes.
+  // Les deux suivent le centre du viewport en ressort amorti (accélération
+  // puis décélération, léger dépassement ~4 %), picto et couleur du mode de
+  // la carte en regard, masqués hors des cartes.
   const ol = document.getElementById("timeline");
   if (ol) {
     const items = [...ol.querySelectorAll<HTMLElement>(".timeline-item")];
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+    // Ressort amorti : la vitesse s'accumule (accélération au départ) puis
+    // s'amortit (décélération à l'arrivée) — plus fluide qu'un simple lerp.
     const mkLerp = (apply: (v: number) => void) => {
       let target = 0;
       let cur = 0;
+      let vel = 0;
       let raf = 0;
       const step = () => {
-        cur += (target - cur) * 0.12;
-        if (Math.abs(target - cur) < 0.5) {
+        vel += (target - cur) * 0.06;
+        vel *= 0.72;
+        cur += vel;
+        if (Math.abs(target - cur) < 0.3 && Math.abs(vel) < 0.3) {
           cur = target;
+          vel = 0;
           raf = 0;
         } else {
           raf = requestAnimationFrame(step);
@@ -318,6 +312,7 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
           target = v;
           if (reduced.matches) {
             cur = v;
+            vel = 0;
             apply(v);
           } else if (!raf) {
             raf = requestAnimationFrame(step);
@@ -325,6 +320,7 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
         },
         settle() {
           cur = target;
+          vel = 0;
           apply(cur);
         },
       };

@@ -137,8 +137,9 @@ Codes typographiques :
    C395,18 430,4 480,7 C525,10 565,15 600,10` sur 600×20, même dasharray,
    opacité 50 %, en deux segments + arc `M2 36.5 A36 36 0 0 1 74 36.5`
    (76×38) qui épouse le médaillon sans l'entourer.
-5. **Filigrane d'année** : année géante quasi invisible derrière chaque carte
-   et chaque en-tête de page détail (voir §3).
+5. **Filigrane d'année** : année géante quasi invisible derrière l'en-tête
+   de chaque page détail (voir §3). Retiré des cartes de la homepage
+   (l'année y vit sur le fil de timeline et dans la nav mobile).
 6. **Cartes bordées** : contenus posés sur `bg-white/75` avec
    `border border-navy/40`, hover `border-navy + shadow-lg shadow-navy/5`.
 7. **Boutons-instruments** (jours, « + N photos ») : mono uppercase 9-10 px,

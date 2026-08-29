@@ -181,9 +181,10 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 - Desktop ≥ 1400 px : glisse le long du fil vertical ; mobile : glisse sur
   la bordure basse de la nav des années (position = progression verticale
   dans la timeline).
-- Position cible = centre du viewport, **traîne volontaire** : rattrapage à
-  12 % de l'écart par frame, arrêt net sous 0,5 px. `prefers-reduced-motion`
-  → placement direct.
+- Position cible = centre du viewport, **ressort amorti** (accélération puis
+  décélération, léger dépassement ~4 % : `vel += écart × 0,06 ; vel ×= 0,72`
+  par frame, arrêt sous 0,3 px d'écart et de vitesse).
+  `prefers-reduced-motion` → placement direct.
 - **Masqués quand aucune carte n'est en regard** (pas de picto par défaut
   qui recouvrirait la flèche du fil — exigence explicite).
 - La carte « en regard » = celle dont la zone verticale (±16 px) contient
@@ -198,7 +199,26 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
   douce (Lenis, repli natif) au lieu d'un rechargement. Bouton ↑ de la page
   détail : remontée douce via Lenis, repli natif.
 - Lightbox : `<dialog>`, Échap natif ; l'Échap « retour carte » est inhibé
-  si une lightbox est ouverte.
+  si une lightbox est ouverte. Gestes : glissement horizontal = photo
+  précédente/suivante (seuil 40 px), glissement bas = fermer (80 px),
+  double tap (< 300 ms, immobile) ou double clic = zoom ×2,5 vers le point
+  visé (refaire = retour ; zoomé, le glissement à un doigt / cliquer-glisser
+  panote, clampé aux bords, et la navigation par gestes est suspendue ;
+  zoom réinitialisé au changement de photo et à la fermeture).
+  Ouverture = verrou du scroll d'arrière-plan (triple : `overflow: hidden`
+  sur `<html>`, `touchmove` bloqué dans le dialog, `lenis.stop()`) —
+  libéré à la fermeture. Sans ça, glisser sur la photo faisait défiler le
+  site derrière (bug mobile vécu).
+- **Aucune règle overflow sur `<html>`/`<body>`** : dans Chrome, `hidden`
+  comme `clip` y décrochent les `position: sticky` (bug vécu deux fois :
+  nav des années). Le débordement horizontal se corrige à la source :
+  - fond de carte en `absolute inset-0 overflow-clip` + enfant
+    `sticky top-0 h-screen` (jamais `fixed inset-0` : il s'étend sous la
+    barre de défilement → 20 px de balayage latéral) ;
+  - tout décor absolu à offset négatif (guillemets du footer…) doit rester
+    dans le viewport à 375 px (offsets responsives).
+  Contrôle : `document.documentElement.scrollWidth === clientWidth` sur
+  chaque page en mobile.
 - Préchargement : `prefetch` Astro (`prefetchAll`, stratégie viewport).
 - Toute animation continue doit être bornée ou à plage morte (voir budget
   perf dans AGENT-DESIGN-DNA.md §8).

@@ -7,7 +7,7 @@
 
 <dialog
   id="lightbox"
-  class="m-auto h-full max-h-none w-full max-w-none bg-transparent p-0 backdrop:bg-ink/95"
+  class="m-auto h-full max-h-none w-full max-w-none touch-manipulation bg-transparent p-0 backdrop:bg-ink/95"
 >
   <div class="flex h-full w-full flex-col" id="lightbox-inner">
     <div class="flex items-center justify-between px-4 py-3">
@@ -43,7 +43,35 @@
   let group: HTMLAnchorElement[] = [];
   let index = 0;
 
+  // Zoom : double tap / double clic = ×2.5 vers le point visé, refaire = retour.
+  // Zoomé : le glissement fait un panoramique (navigation suspendue).
+  let zoom = 1, tx = 0, ty = 0;
+  const applyZoom = (animate = true) => {
+    img.style.transition = animate ? "transform 0.25s ease" : "none";
+    img.style.transform = zoom > 1 ? `translate(${tx}px, ${ty}px) scale(${zoom})` : "";
+    img.style.cursor = zoom > 1 ? "grab" : "zoom-in";
+  };
+  const clampPan = () => {
+    const maxX = (img.offsetWidth * (zoom - 1)) / 2;
+    const maxY = (img.offsetHeight * (zoom - 1)) / 2;
+    tx = Math.min(maxX, Math.max(-maxX, tx));
+    ty = Math.min(maxY, Math.max(-maxY, ty));
+  };
+  const resetZoom = () => { zoom = 1; tx = 0; ty = 0; applyZoom(false); };
+  const toggleZoom = (cx: number, cy: number) => {
+    if (zoom > 1) { zoom = 1; tx = 0; ty = 0; }
+    else {
+      zoom = 2.5;
+      const r = img.getBoundingClientRect();
+      tx = -(cx - (r.left + r.width / 2)) * (zoom - 1);
+      ty = -(cy - (r.top + r.height / 2)) * (zoom - 1);
+      clampPan();
+    }
+    applyZoom();
+  };
+
   function show(i: number) {
+    resetZoom();
     index = (i + group.length) % group.length;
     const link = group[index];
     img.src = link.href;
@@ -68,7 +96,27 @@
     group = [...document.querySelectorAll<HTMLAnchorElement>("a[data-lightbox]")];
     show(group.indexOf(link));
     dialog.showModal();
+    // Verrouille le défilement de la page derrière la lightbox (mobile :
+    // sans ça, le glissement sur la photo fait aussi bouger le site).
+    document.documentElement.style.overflow = "hidden";
+    (window as any).lenis?.stop();
   });
+
+  // Aucun contenu défilant dans la lightbox : bloquer tout geste de scroll
+  // pour qu'il n'atteigne jamais la page en arrière-plan. Zoomé : le
+  // glissement à un doigt panote dans la photo.
+  let panX = 0, panY = 0;
+  dialog.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    if (zoom > 1 && e.touches.length === 1) {
+      tx += e.touches[0].clientX - panX;
+      ty += e.touches[0].clientY - panY;
+      panX = e.touches[0].clientX;
+      panY = e.touches[0].clientY;
+      clampPan();
+      applyZoom(false);
+    }
+  }, { passive: false });
 
   document.getElementById("lightbox-prev")!.addEventListener("click", () => show(index - 1));
   document.getElementById("lightbox-next")!.addEventListener("click", () => show(index + 1));
@@ -85,19 +133,52 @@
     dialog.close();
   });
 
-  dialog.addEventListener("close", () => { img.src = ""; });
+  dialog.addEventListener("close", () => {
+    img.src = "";
+    resetZoom();
+    document.documentElement.style.overflow = "";
+    (window as any).lenis?.start();
+  });
 
   // Mobile : navigation au glissement horizontal (seuil 40 px), fermeture au
-  // glissement vertical vers le bas (seuil 80 px).
-  let touchX = 0, touchY = 0;
+  // glissement vertical vers le bas (seuil 80 px), zoom au double tap (deux
+  // touchers immobiles à moins de 300 ms). Zoomé : seuls le panoramique et
+  // le double tap (dézoom) restent actifs.
+  let touchX = 0, touchY = 0, lastTap = 0;
   dialog.addEventListener("touchstart", (e) => {
-    touchX = e.touches[0].clientX;
-    touchY = e.touches[0].clientY;
+    touchX = panX = e.touches[0].clientX;
+    touchY = panY = e.touches[0].clientY;
   }, { passive: true });
   dialog.addEventListener("touchend", (e) => {
-    const dx = e.changedTouches[0].clientX - touchX;
-    const dy = e.changedTouches[0].clientY - touchY;
+    const x = e.changedTouches[0].clientX;
+    const y = e.changedTouches[0].clientY;
+    const dx = x - touchX;
+    const dy = y - touchY;
+    const tap = Math.abs(dx) < 10 && Math.abs(dy) < 10;
+    if (tap && e.timeStamp - lastTap < 300) { toggleZoom(x, y); lastTap = 0; return; }
+    if (tap) { lastTap = e.timeStamp; return; }
+    if (zoom > 1) return; // glissement zoomé = panoramique (géré au touchmove)
     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) show(dx < 0 ? index + 1 : index - 1);
     else if (dy > 80 && Math.abs(dy) > Math.abs(dx)) dialog.close();
   }, { passive: true });
+  // Desktop : double clic = zoom/dézoom, cliquer-glisser zoomé = panoramique.
+  img.addEventListener("dblclick", (e) => toggleZoom(e.clientX, e.clientY));
+  img.addEventListener("pointerdown", (e) => {
+    if (zoom <= 1 || e.pointerType === "touch") return;
+    e.preventDefault();
+    img.style.cursor = "grabbing";
+    let px = e.clientX, py = e.clientY;
+    const move = (ev: PointerEvent) => {
+      tx += ev.clientX - px; ty += ev.clientY - py;
+      px = ev.clientX; py = ev.clientY;
+      clampPan(); applyZoom(false);
+    };
+    const up = () => {
+      img.style.cursor = "grab";
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  });
 </script>
