@@ -1,0 +1,36 @@
+---
+/**
+ * Pastille « voyageur » des timelines (fil desktop et nav mobile de la
+ * homepage) : cycliste carmin ou randonneur sapin selon la carte en regard.
+ * La bascule d'icône et le positionnement sont pilotés par
+ * src/scripts/timeline.ts (classes .rider-bike / .rider-hike).
+ */
+import { moveIcon } from "../lib/mode.js";
+
+interface Props {
+  id: string;
+  /** Classes de positionnement/taille de la pastille (posées par l'appelant). */
+  class: string;
+  /** Taille des pictos (classes Tailwind h/w). */
+  iconClass: string;
+  /** Masqué au chargement (voyageur mobile, position posée par script). */
+  hiddenAtLoad?: boolean;
+}
+const { id, class: className, iconClass, hiddenAtLoad = false } = Astro.props;
+const bike = moveIcon("vélo");
+const hike = moveIcon("à pied");
+---
+
+<div
+  id={id}
+  aria-hidden="true"
+  style={hiddenAtLoad ? "visibility: hidden" : undefined}
+  class={`pointer-events-none items-center justify-center rounded-full border border-navy/30 bg-paper ${className}`}
+>
+  <svg viewBox={bike.viewBox} class={`rider-bike ${iconClass}`} aria-hidden="true">
+    <path d={bike.d} fill="var(--color-carmin)" />
+  </svg>
+  <svg viewBox={hike.viewBox} class={`rider-hike hidden ${iconClass}`} aria-hidden="true">
+    <path d={hike.d} fill="var(--color-sapin)" />
+  </svg>
+</div>

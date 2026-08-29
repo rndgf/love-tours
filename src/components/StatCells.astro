@@ -1,0 +1,58 @@
+---
+/**
+ * Rangée de cellules de statistiques (colonnes égales, filets navy/20) :
+ * picto Font Awesome 14 px en aplat navy ancré en bas, valeur colorée,
+ * label mono 8 px. Utilisée par les cartes de la homepage et les en-têtes
+ * de jour de la page détail (desktop et mobile) — anatomie décrite dans
+ * docs/AGENT-DESIGN-DNA.md §5.2.
+ */
+interface Item {
+  value: string;
+  label: string;
+  /** Tracé et viewBox Font Awesome (src/lib/icons.js ou mode.js). */
+  icon: string;
+  viewBox: string;
+}
+interface Props {
+  items: Item[];
+  /** Classes du conteneur grid (nombre de colonnes, largeur, visibilité). */
+  class: string;
+  /** Classes de la valeur (taille + couleur par classe d'accent). */
+  valueClass?: string;
+  /** Couleur de la valeur en style inline (couleur du jour, page détail). */
+  valueStyle?: string;
+  /** Padding horizontal des cellules (jours desktop : px-3.5). */
+  cellClass?: string;
+}
+const {
+  items,
+  class: className,
+  valueClass = "text-[12px]",
+  valueStyle,
+  cellClass = "",
+} = Astro.props;
+---
+
+<div class={`font-mono ${className}`}>
+  {
+    items.map((item, i) => (
+      <div class={`text-center ${cellClass} ${i > 0 ? "border-l border-navy/20" : ""}`}>
+        <svg
+          width="14"
+          height="14"
+          viewBox={item.viewBox}
+          preserveAspectRatio="xMidYMax meet"
+          fill="none"
+          class="mx-auto mb-1"
+          aria-hidden="true"
+        >
+          <path d={item.icon} class="fill-navy" />
+        </svg>
+        <div class={`font-medium ${valueClass}`} style={valueStyle}>
+          {item.value}
+        </div>
+        <div class="mt-0.5 text-[8px] uppercase tracking-[0.14em] text-navy">{item.label}</div>
+      </div>
+    ))
+  }
+</div>

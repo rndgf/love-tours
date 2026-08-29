@@ -1,0 +1,86 @@
+---
+import "@fontsource/rock-salt";
+import Base from "../layouts/Base.astro";
+import Polaroid from "../components/Polaroid.astro";
+import { tours } from "../lib/tours.js";
+
+const firstYear = Math.min(...tours.map((t) => t.year));
+const lastYear = Math.max(...tours.map((t) => t.year));
+
+// Portrait « en civil » (photo personnelle : dossier gitignoré, présent en
+// local seulement — la page tient debout sans lui).
+const photos = import.meta.glob("../assets/about/*.{jpg,jpeg,png,webp}", {
+  eager: true,
+  import: "default",
+});
+const portrait =
+  (Object.values(photos)[0] as ImageMetadata | undefined) ?? null;
+---
+
+<Base
+  title="À propos · Love Tours ❤"
+  description="Ce qu'est cet atlas, pourquoi il existe et comment il est fabriqué."
+>
+  <section class="mx-auto max-w-6xl px-4 pb-8 pt-10 sm:px-6 sm:pb-10 sm:pt-20">
+    <div class="relative">
+      <span
+        aria-hidden="true"
+        class="font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center text-[7rem] font-semibold leading-none tracking-tight text-navy/[0.045] sm:text-[13rem]"
+        >❤</span
+      >
+      <div
+        class="grid gap-10 sm:grid-cols-[1fr_300px] sm:items-center sm:gap-14"
+      >
+        <div>
+          <p
+            class="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-navy"
+          >
+            à propos · {firstYear}–{lastYear}
+          </p>
+          <h1
+            class="font-display mt-1 text-3xl font-semibold tracking-tight sm:text-5xl"
+          >
+            Un atlas de nos étés
+          </h1>
+          <div
+            class="mt-6 max-w-2xl space-y-4 text-base text-ink-soft sm:text-lg"
+          >
+            <p>
+              Chaque été depuis {firstYear}, nous partons quelques jours en
+              itinérance : une année à vélo, l'autre à pied. Ce site est notre
+              carnet de bord, tenu comme une planche d'atlas : les traces, les
+              kilomètres, les photos, et les noms de lieux qu'on aime se répéter
+              au retour.
+            </p>
+            <p>
+              Au départ, c'était une idée de cadeau : une surprise fabriquée en
+              secret, pour réunir nos étés en un seul endroit. Puis le projet a
+              grandi et il est devenu autre chose : un album souvenirs qui
+              s'épaissit d'un voyage chaque année.
+            </p>
+            <p>
+              C'est un site privé, sans autre ambition que la mémoire de nos
+              moments de voyage en amoureux. Il n'est pas indexé, il ne raconte
+              qu'à nous deux et à ceux qui en ont l'adresse.
+            </p>
+          </div>
+        </div>
+        {
+          portrait && (
+            <Polaroid
+              src={portrait}
+              alt="Mélanie et Renaud"
+              caption="Mélanie & Renaud"
+              tilt={2.6}
+              class="mx-auto w-64 sm:w-full"
+              imgClass="object-top"
+              sizes="(min-width: 640px) 300px, 256px"
+              widths={[300, 600]}
+              eager
+            />
+          )
+        }
+      </div>
+    </div>
+  </section>
+</Base>

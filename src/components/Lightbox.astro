@@ -35,6 +35,8 @@
 </dialog>
 
 <script>
+  import { lockScroll, unlockScroll } from "../scripts/smooth-scroll";
+
   const dialog = document.getElementById("lightbox") as HTMLDialogElement;
   const img = document.getElementById("lightbox-img") as HTMLImageElement;
   const counter = document.getElementById("lightbox-counter")!;
@@ -98,8 +100,7 @@
     dialog.showModal();
     // Verrouille le défilement de la page derrière la lightbox (mobile :
     // sans ça, le glissement sur la photo fait aussi bouger le site).
-    document.documentElement.style.overflow = "hidden";
-    (window as any).lenis?.stop();
+    lockScroll();
   });
 
   // Aucun contenu défilant dans la lightbox : bloquer tout geste de scroll
@@ -136,8 +137,7 @@
   dialog.addEventListener("close", () => {
     img.src = "";
     resetZoom();
-    document.documentElement.style.overflow = "";
-    (window as any).lenis?.start();
+    unlockScroll();
   });
 
   // Mobile : navigation au glissement horizontal (seuil 40 px), fermeture au

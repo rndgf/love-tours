@@ -1,0 +1,38 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="Page introuvable · Love Tours ❤"
+  description="Cette page ne figure sur aucune de nos cartes."
+>
+  <section
+    class="relative mx-auto flex min-h-[55vh] max-w-6xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6 sm:py-24"
+  >
+    <!-- Filigrane : le code d'erreur en chiffres d'atlas -->
+    <span
+      aria-hidden="true"
+      class="font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center text-[9rem] font-semibold leading-none tracking-tight text-navy/[0.045] sm:text-[16rem]"
+      >404</span
+    >
+    <p class="font-mono text-[10px] font-medium uppercase tracking-[0.3em] text-navy">
+      hors carte
+    </p>
+    <h1
+      class="font-display mt-4 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl"
+      style="text-shadow: 0 0 3px rgba(250,246,238,1), 0 0 10px rgba(250,246,238,1), 0 0 24px rgba(250,246,238,1);"
+    >
+      Cette page ne figure sur<br /><em>aucune de nos cartes.</em>
+    </h1>
+    <p class="mx-auto mt-5 max-w-xl text-base text-ink-soft sm:text-lg">
+      Le sentier s'arrête ici. Le mieux, comme toujours quand on est perdus :
+      revenir au point de départ.
+    </p>
+    <a
+      href="/"
+      class="font-mono mt-8 border border-navy/40 bg-paper px-5 py-2.5 text-[11px] uppercase tracking-[0.18em] text-navy transition hover:border-navy hover:bg-paper-deep"
+    >
+      ← retour à l'atlas
+    </a>
+  </section>
+</Base>

@@ -18,6 +18,8 @@
   --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
   --font-body: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+  /* Manuscrite (légendes de polaroid) — chargée seulement où elle sert */
+  --font-hand: "Rock Salt", cursive;
 }
 
 /* Mobile : ancres en défilement doux natif (Lenis n'est actif qu'à partir

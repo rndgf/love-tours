@@ -42,6 +42,22 @@
 | CSS critique | `build.inlineStylesheets: "always"` | zéro requête CSS bloquante |
 | Déploiement | `wrangler pages deploy` | `public/_headers` doit suivre |
 
+### 2.1 Architecture du front
+
+- **`src/scripts/*.ts`** — modules clients partagés, importés par les
+  `<script>` Astro (jamais de globals `window.*`, jamais de dépendance à
+  l'ordre d'exécution des scripts) :
+  - `smooth-scroll.ts` : singleton Lenis + `scrollToTop`/`scrollToEl`
+    (repli natif) + `lockScroll`/`unlockScroll` (lightbox) ;
+  - `stat-counters.ts` : `countUp` + `initStatCounters` ;
+  - `timeline.ts` : voyageurs de la HP (ressort, aimantation, année active) ;
+  - `tour-page.ts` : interactions de la page détail.
+- **Composants partagés** : `StatsPanel.astro` (les deux cartouches
+  `<dl>`), `StatCells.astro` (toutes les rangées de cellules de stats),
+  `TimelineRider.astro` (les deux voyageurs), `Flag.astro`, `MiniMap.astro`,
+  `LogoMark.astro`, `TourMap.astro`, `DayGallery.astro`, `Lightbox.astro`.
+- Historique et justifications : [RAPPORT-REFACTOR.md](RAPPORT-REFACTOR.md).
+
 ## 3. Modèle de données (contrat d'entrée du site)
 
 Le site consomme des fichiers générés par le pipeline (`npm run tours:all`),
@@ -129,6 +145,24 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
    précédente/suivante (grisées si absentes). Bouton flottant « ↑ » après
    600 px de scroll.
 
+### 4.2 bis Pages annexes
+
+- **`/a-propos/`** : même gabarit d'en-tête que les pages d'édition
+  (filigrane ❤, kicker, H1, prose) + portrait « en civil » en couleur au
+  format **polaroid** (composant `Polaroid.astro` : carte 88×107 mm — bords
+  5 %, marge basse 26 % —, recadrage carré `object-top`, incliné 2,6°,
+  ombre douce), légende manuscrite « Mélanie & Renaud » en **Rock Salt**
+  (auto-hébergée via `@fontsource/rock-salt`, importée par la seule page
+  à propos ; token `--font-hand`). La photo vit dans `src/assets/about/`
+  (gitignoré — photo personnelle, jamais dans le dépôt) ; la page tient
+  debout sans elle (glob tolérant). Liée depuis le crédit du footer
+  (« à propos »). Pas de bouton retour.
+- Le footer est ferré en bas des pages courtes (body en colonne flex,
+  `main` flex-1).
+- **`/404`** : servie automatiquement par Cloudflare Pages (`dist/404.html`).
+  Filigrane « 404 », kicker « hors carte », phrase et bouton retour —
+  ton du site, halo de lisibilité du héro, sans illustration.
+
 ### 4.3 Interactions de la page détail
 
 - Clic sur un bouton jour **ou** sur la trace du jour dans la carte :
@@ -181,9 +215,15 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 - Desktop ≥ 1400 px : glisse le long du fil vertical ; mobile : glisse sur
   la bordure basse de la nav des années (position = progression verticale
   dans la timeline).
-- Position cible = centre du viewport, **ressort amorti** (accélération puis
-  décélération, léger dépassement ~4 % : `vel += écart × 0,06 ; vel ×= 0,72`
-  par frame, arrêt sous 0,3 px d'écart et de vitesse).
+- Position cible — desktop : **aimantée sur le point d'année** de la carte
+  en regard (centre vertical de la carte), le ressort fait glisser le
+  voyageur de point en point ; en **approche** (centre du viewport entre le
+  haut du fil et la première carte), il parcourt le fil au rythme du scroll
+  (picto du mode de la première carte) avant de s'aimanter ; mobile :
+  progression continue le long de la nav. Animation : **ressort amorti** (accélération puis
+  décélération lente et visible : `vel += écart × 0,012 ; vel ×= 0,84`
+  par frame — un saut de point en point (~500 px) se parcourt en ~1,4 s
+  avec ~5 px de dépassement ; arrêt sous 0,3 px d'écart et de vitesse).
   `prefers-reduced-motion` → placement direct.
 - **Masqués quand aucune carte n'est en regard** (pas de picto par défaut
   qui recouvrirait la flèche du fil — exigence explicite).
@@ -240,6 +280,5 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 
 - Aucun tracker, aucune fonte externe (fontes npm auto-hébergées), aucune
   clé API, aucun cookie.
-- Pas de page 404 personnalisée, pas de flux RSS, pas de sitemap (site non
-  indexé).
+- Pas de flux RSS, pas de sitemap (site non indexé).
 - Pas de mode sombre.

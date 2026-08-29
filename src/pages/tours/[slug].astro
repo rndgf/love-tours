@@ -1,6 +1,8 @@
 ---
 import Base from "../../layouts/Base.astro";
 import Flag from "../../components/Flag.astro";
+import StatCells from "../../components/StatCells.astro";
+import StatsPanel from "../../components/StatsPanel.astro";
 import TourMap from "../../components/TourMap.astro";
 import DayGallery from "../../components/DayGallery.astro";
 import Lightbox from "../../components/Lightbox.astro";
@@ -13,7 +15,7 @@ import {
 } from "../../lib/tours.js";
 import { dayColor } from "../../lib/palette.js";
 import { accentText, accentHover, moveIcon } from "../../lib/mode.js";
-import { ICONS } from "../../lib/pictos.js";
+import { ICONS } from "../../lib/icons.js";
 
 export function getStaticPaths() {
   return tours.map((tour, i) => ({
@@ -41,6 +43,20 @@ const cornerNW = `${fmtCoord(tour.bbox[3], "N", "S")} · ${fmtCoord(tour.bbox[0]
 // Modes de transfert (bus…) présents : pilote la légende des pointillés.
 // Calculés à l'import (tours:import) et stockés dans le JSON du tour.
 const transferModes = tour.transferModes ?? [];
+
+// Stats des totaux de l'édition (cartouche) et de chaque jour (en-têtes).
+const editionStats = [
+  { value: tour.totals.distanceKm, label: "km" },
+  { value: tour.totals.days, label: "jours" },
+  { value: tour.totals.gainM, label: "m dénivelé +" },
+  { value: formatHours(tour.totals.movingS), label: "effort" },
+];
+const dayStats = (day) => [
+  { value: `${day.distanceKm}km`, label: "distance", icon: ICONS.route.d, viewBox: ICONS.route.viewBox },
+  { value: `${day.gainM}mD+`, label: "dénivelé", icon: ICONS.mountain.d, viewBox: ICONS.mountain.viewBox },
+  { value: formatHours(day.movingS), label: "effort", icon: move.d, viewBox: move.viewBox },
+  { value: formatHours(day.elapsedS), label: "au total", icon: ICONS.clock.d, viewBox: ICONS.clock.viewBox },
+];
 ---
 
 <Base
@@ -79,32 +95,13 @@ const transferModes = tour.transferModes ?? [];
       }
     </div>
 
-    <dl
+    <StatsPanel
       id="edition-stats"
-      class="mt-9 grid scroll-mt-4 grid-cols-2 border-y border-navy sm:grid-cols-4 sm:scroll-mt-28"
-      style="background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 14%, rgba(255,255,255,0.6) 86%, rgba(255,255,255,0) 100%);"
-    >
-      {
-        [
-          [tour.totals.distanceKm, "km"],
-          [tour.totals.days, "jours"],
-          [tour.totals.gainM, "m dénivelé +"],
-          [formatHours(tour.totals.movingS), "effort"],
-        ].map(([value, label], i) => (
-          <div
-            class={`border-navy/20 px-3 py-4 text-center sm:px-4 sm:py-5
-          ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""}`}
-          >
-            <dd class={`font-mono text-2xl font-medium ${accent} sm:text-3xl`}>
-              <span class="stat-count">{value}</span>
-            </dd>
-            <dt class="font-mono mt-1 text-[9px] uppercase tracking-[0.18em] text-navy">
-              {label}
-            </dt>
-          </div>
-        ))
-      }
-    </dl>
+      items={editionStats}
+      cols="sm:grid-cols-4"
+      valueClass={accent}
+      class="mt-9 scroll-mt-4 sm:scroll-mt-28"
+    />
   </section>
 
   <!-- Planche cartographique -->
@@ -196,53 +193,22 @@ const transferModes = tour.transferModes ?? [];
                 </div>
               </div>
               {!day.noTrace && (
-                <div class="font-mono mt-5 grid grid-cols-4 sm:hidden">
-                  {[
-                    [`${day.distanceKm}km`, "distance", ICONS.route.d, ICONS.route.viewBox],
-                    [`${day.gainM}mD+`, "dénivelé", ICONS.mountain.d, ICONS.mountain.viewBox],
-                    [formatHours(day.movingS), "effort", move.d, move.viewBox],
-                    [formatHours(day.elapsedS), "au total", ICONS.clock.d, ICONS.clock.viewBox],
-                  ].map(([value, label, icon, vb], i) => (
-                    <div class={`text-center ${i > 0 ? "border-l border-navy/20" : ""}`}>
-                      <svg width="14" height="14" viewBox={vb} preserveAspectRatio="xMidYMax meet" fill="none" class="mx-auto mb-1" aria-hidden="true">
-                        <path d={icon} class="fill-navy" />
-                      </svg>
-                      <div class="text-[11px] font-medium" style={`color:${dayColor(day.n)}`}>{value}</div>
-                      <div class="mt-0.5 text-[8px] uppercase tracking-[0.14em] text-navy">{label}</div>
-                    </div>
-                  ))}
-                </div>
+                <StatCells
+                  items={dayStats(day)}
+                  class="mt-5 grid grid-cols-4 sm:hidden"
+                  valueClass="text-[11px]"
+                  valueStyle={`color:${dayColor(day.n)}`}
+                />
               )}
             </div>
             {!day.noTrace && (
-              <div class="font-mono hidden shrink-0 grid-cols-4 self-center sm:grid">
-                {[
-                  [`${day.distanceKm}km`, "distance", ICONS.route.d, "fa", ICONS.route.viewBox],
-                  [`${day.gainM}mD+`, "dénivelé", ICONS.mountain.d, "fa", ICONS.mountain.viewBox],
-                  [formatHours(day.movingS), "effort", move.d, "fa", move.viewBox],
-                  [formatHours(day.elapsedS), "au total", ICONS.clock.d, "fa", ICONS.clock.viewBox],
-                ].map(([value, label, icon, extra, vb], i) => (
-                  <div class={`px-3.5 text-center ${i > 0 ? "border-l border-navy/20" : ""}`}>
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox={vb ?? "0 0 16 16"} preserveAspectRatio="xMidYMax meet"
-                      fill="none"
-                      class="stroke-navy mx-auto mb-1"
-                      stroke-width="1.3"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      {extra === "dot" && <circle cx="2.5" cy="13" r="1.2" class="fill-navy" stroke="none" />}
-                      {extra === "clock" && <circle cx="8" cy="8" r="6" />}
-                      <path d={icon} {...(extra === "fa" ? { class: "fill-navy", stroke: "none" } : {})} />
-                    </svg>
-                    <div class="text-[12px] font-medium" style={`color:${dayColor(day.n)}`}>{value}</div>
-                    <div class="mt-0.5 text-[8px] uppercase tracking-[0.14em] text-navy">{label}</div>
-                  </div>
-                ))}
-              </div>
+              <StatCells
+                items={dayStats(day)}
+                class="hidden shrink-0 grid-cols-4 self-center sm:grid"
+                valueClass="text-[12px]"
+                valueStyle={`color:${dayColor(day.n)}`}
+                cellClass="px-3.5"
+              />
             )}
           </header>
           <DayGallery slug={tour.slug} day={day.n} eager={day.n === 1} />
@@ -306,95 +272,8 @@ const transferModes = tour.transferModes ?? [];
     })}
   />
   <script>
-    import { formatHours } from "../../lib/tours.js";
-    import { parseDayHash, dayHash } from "../../lib/dayhash.js";
-
-    // Clic sur une puce de jour : stats du cartouche (teintées à la couleur du
-    // jour), état actif du bouton, et hash #jN pour survivre au rechargement.
-    const { days: dayStats, totals } = JSON.parse(
-      document.getElementById("day-stats-data")!.textContent!,
-    );
-    const cells = document.querySelectorAll("#edition-stats > div");
-    const setStats = (rows: [string | number, string][], color?: string, animate = true) =>
-      rows.forEach(([value, label], i) => {
-        const dd = cells[i].querySelector("dd")!;
-        dd.textContent = String(value);
-        dd.style.color = color ?? "";
-        cells[i].querySelector("dt")!.textContent = label;
-        // Même défilement 0 → valeur qu'au premier affichage (défini dans
-        // Base ; absent si prefers-reduced-motion).
-        if (animate) (window as any).statCountUp?.(dd);
-      });
-    const animateStats = () =>
-      cells.forEach((c) => (window as any).statCountUp?.(c.querySelector("dd")!));
-    const buttons = [...document.querySelectorAll<HTMLElement>("[data-zoom-day]")];
-    const selectDay = (n: number, scroll = true) => {
-      buttons.forEach((b) => b.classList.toggle("border-navy", +b.dataset.zoomDay! === n));
-      buttons.forEach((b) => b.classList.toggle("bg-paper-deep", +b.dataset.zoomDay! === n));
-      const d = dayStats.find((x: any) => x.n === n);
-      // Si le cartouche n'est pas visible (clic depuis la carte, plus bas),
-      // remonter jusqu'à lui — via Lenis quand il est actif (un scrollIntoView
-      // natif se ferait rattraper par sa position interne), et ne jouer le
-      // défilement des compteurs qu'à l'arrivée, pour qu'il soit visible.
-      const stats = document.getElementById("edition-stats")!;
-      const r = stats.getBoundingClientRect();
-      const needScroll = scroll && (r.top < 0 || r.bottom > innerHeight);
-      setStats(
-        d
-          ? [[d.distanceKm, "km"], [d.gainM, "m dénivelé +"], [formatHours(d.movingS), "effort"], [formatHours(d.elapsedS), "au total"]]
-          : [[totals.distanceKm, "km"], [totals.days, "jours"], [totals.gainM, "m dénivelé +"], [formatHours(totals.movingS), "effort"]],
-        d?.color,
-        !needScroll,
-      );
-      history.replaceState(null, "", n > 0 ? dayHash(n) : location.pathname + location.search);
-      if (needScroll) {
-        const lenis = (window as any).lenis;
-        if (lenis) {
-          const offset = -(parseFloat(getComputedStyle(stats).scrollMarginTop) || 0);
-          // Compteurs joués à l'arrivée. Filet setTimeout : onComplete peut ne
-          // pas se déclencher (cible déjà quasi atteinte, molette pendant le
-          // scroll) — une seule exécution dans tous les cas.
-          let played = false;
-          const play = () => {
-            if (played) return;
-            played = true;
-            animateStats();
-          };
-          lenis.scrollTo(stats, { offset, duration: 0.9, onComplete: play });
-          setTimeout(play, 1000);
-        } else {
-          stats.scrollIntoView({ behavior: "smooth", block: "start" });
-          animateStats();
-        }
-      }
-    };
-    buttons.forEach((btn) => btn.addEventListener("click", () => selectDay(+btn.dataset.zoomDay!)));
-    const initial = parseDayHash(location.hash);
-    // Différé d'un tick : ce script s'exécute avant celui de Base (ordre du
-    // document), or selectDay anime via window.statCountUp, défini par Base.
-    if (initial != null && dayStats.some((d: any) => d.n === initial))
-      setTimeout(() => selectDay(initial, false), 0);
-    // ESC : retour à la vue complète (carte, stats, hash) — sauf si une boîte
-    // de dialogue (lightbox) est ouverte : son ESC natif la ferme, sans plus.
-    document.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape") return;
-      if (document.querySelector("dialog[open]")) return;
-      document.querySelector<HTMLElement>('[data-zoom-day="0"]')?.click();
-    });
-  </script>
-
-  <script>
-    const btn = document.getElementById("back-to-top")!;
-    btn.addEventListener("click", () => {
-      const lenis = (window as any).lenis;
-      if (lenis) lenis.scrollTo(0);
-      else window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-    const toggle = () => {
-      btn.style.display = window.scrollY < 600 ? "none" : "flex";
-    };
-    window.addEventListener("scroll", toggle, { passive: true });
-    toggle();
+    import { initTourPage } from "../../scripts/tour-page";
+    initTourPage();
   </script>
 
   <Lightbox />

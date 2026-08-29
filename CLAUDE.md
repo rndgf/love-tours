@@ -10,6 +10,18 @@
 - Vérifier à chaque changement si l'un des trois est impacté ; le mettre à
   jour dans le même lot de travail (même commit).
 
+## Nommage — TOUJOURS
+
+- **Identifiants 100 % anglais**, sans exception : noms de fichiers,
+  composants, variables, fonctions, classes CSS, IDs, attributs `data-*`.
+  Seule exception : les fichiers de `src/pages/` dont le nom devient une
+  URL visible (ex. `a-propos.astro`) — l'URL est un texte utilisateur,
+  donc en français.
+- Le **français** est réservé aux commentaires, aux textes visibles par
+  l'utilisateur et aux données (`mode: "vélo"`, toponymes…).
+- **Aucun franglais** : jamais d'identifiant mêlant les deux langues
+  (ex. interdit : `StatsCartouche`, `pictosList`, `cartoucheStats`).
+
 ## Déploiement
 
 - **Le déploiement ne se fait jamais silencieusement.** Avant chaque `npm run deploy` (ou `wrangler pages deploy`), annoncer explicitement l'intention de déployer et attendre l'accord de l'utilisateur, sauf si celui-ci vient de le demander dans son dernier message.

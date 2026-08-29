@@ -1,27 +1,38 @@
 ---
+import AlbumPrint from "../components/AlbumPrint.astro";
 import Base from "../layouts/Base.astro";
 import Flag from "../components/Flag.astro";
 import MiniMap from "../components/MiniMap.astro";
+import StatCells from "../components/StatCells.astro";
+import StatsPanel from "../components/StatsPanel.astro";
+import TimelineRider from "../components/TimelineRider.astro";
 import { Image } from "astro:assets";
 import { tours, formatRange, formatHours } from "../lib/tours.js";
 import { accentText, accentVar, isBike, moveIcon } from "../lib/mode.js";
-import { ICONS } from "../lib/pictos.js";
+import { ICONS } from "../lib/icons.js";
 import { coverFor } from "../lib/photos.js";
 
 // Relevés cumulés ; les km sont distingués par mode (vélo / à pied).
 const sum = (list, f) => Math.round(list.reduce((s, t) => s + f(t), 0));
-// [valeur, unité collée à la valeur ?, label]
 const globalStats = [
-  [tours.length, "", "voyages"],
-  [sum(tours.filter((t) => isBike(t.mode)), (t) => t.totals.distanceKm), "km", "à vélo"],
-  [sum(tours.filter((t) => !isBike(t.mode)), (t) => t.totals.distanceKm), "km", "à pied"],
-  [sum(tours, (t) => t.totals.days), "", "jours dehors"],
-  [sum(tours, (t) => t.totals.gainM), "m", "de dénivelé +"],
+  { value: tours.length, label: "voyages" },
+  { value: sum(tours.filter((t) => isBike(t.mode)), (t) => t.totals.distanceKm), unit: "km", label: "à vélo" },
+  { value: sum(tours.filter((t) => !isBike(t.mode)), (t) => t.totals.distanceKm), unit: "km", label: "à pied" },
+  { value: sum(tours, (t) => t.totals.days), label: "jours dehors", hideMobile: true },
+  { value: sum(tours, (t) => t.totals.gainM), unit: "m", label: "de dénivelé +" },
 ];
 const firstYear = Math.min(...tours.map((t) => t.year));
-// Pictos du « voyageur » qui parcourt la timeline au scroll (desktop).
-const riderBike = moveIcon("vélo");
-const riderHike = moveIcon("à pied");
+
+// Stats d'une carte d'édition (3 cellules : distance / dénivelé / effort).
+const cardStats = (tour) => {
+  const move = moveIcon(tour.mode);
+  return [
+    { value: `${Math.round(tour.totals.distanceKm)}km`, label: "distance", icon: ICONS.route.d, viewBox: ICONS.route.viewBox },
+    { value: `${tour.totals.gainM}mD+`, label: "dénivelé", icon: ICONS.mountain.d, viewBox: ICONS.mountain.viewBox },
+    { value: formatHours(tour.totals.movingS), label: "effort", icon: move.d, viewBox: move.viewBox },
+  ];
+};
+
 // Inclinaisons des tirages photo (déterministes par position : album collé
 // à la main, jamais parfaitement droit).
 const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
@@ -52,26 +63,7 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
 
   <!-- Relevés cumulés, façon cartouche d'atlas -->
   <section class="mx-auto max-w-4xl px-4 sm:px-6">
-    <dl
-      class="grid grid-cols-2 border-y border-navy sm:grid-cols-5"
-      style="background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 14%, rgba(255,255,255,0.6) 86%, rgba(255,255,255,0) 100%);"
-    >
-      {
-        globalStats.map(([value, unit, label], i) => (
-          <div
-            class={`border-navy/20 px-3 py-4 text-center sm:px-4 sm:py-5
-          ${i === 1 || i === 4 ? "border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""} ${i === 3 ? "hidden sm:block" : ""}`}
-          >
-            <dd class="font-mono text-2xl font-medium text-navy sm:text-3xl">
-              <span class="stat-count">{value}</span>{unit && <span class="text-base sm:text-lg">{unit}</span>}
-            </dd>
-            <dt class="font-mono mt-1 text-[9px] uppercase tracking-[0.18em] text-navy">
-              {label}
-            </dt>
-          </div>
-        ))
-      }
-    </dl>
+    <StatsPanel items={globalStats} cols="sm:grid-cols-5" valueClass="text-navy" />
   </section>
 
   <!-- Index des années : accès direct à une édition -->
@@ -97,20 +89,13 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
       }
     </div>
     <!-- Voyageur mobile : glisse sur la bordure basse de la nav au rythme de
-         la progression dans la timeline (même picto/couleur que desktop). -->
-    <div
+         la progression dans la timeline. -->
+    <TimelineRider
       id="yn-rider"
-      aria-hidden="true"
-      style="visibility: hidden"
-      class="pointer-events-none absolute left-0 top-full flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-navy/30 bg-paper"
-    >
-      <svg viewBox={riderBike.viewBox} class="rider-bike h-3.5 w-3.5" aria-hidden="true">
-        <path d={riderBike.d} fill="var(--color-carmin)" />
-      </svg>
-      <svg viewBox={riderHike.viewBox} class="rider-hike hidden h-3.5 w-3.5" aria-hidden="true">
-        <path d={riderHike.d} fill="var(--color-sapin)" />
-      </svg>
-    </div>
+      hiddenAtLoad
+      class="absolute left-0 top-full flex h-6 w-6 -translate-x-1/2 -translate-y-1/2"
+      iconClass="h-3.5 w-3.5"
+    />
   </nav>
 
   <!-- Planches des éditions, sur le fil des années -->
@@ -133,24 +118,15 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
         <!-- Pointe de flèche cartographique (queue d'aronde), pleine -->
         <path d="M8 2 L13 12 L8 9.2 L3 12 Z" fill="#1e2f4d" />
       </svg>
-      <!-- Voyageur : cycliste ou randonneur (selon la carte en regard) qui
-           descend le fil au rythme du scroll (script en bas de page). -->
-      <div
+      <!-- Voyageur desktop : aimanté de point d'année en point d'année. -->
+      <TimelineRider
         id="tl-rider"
-        aria-hidden="true"
-        class="pointer-events-none absolute left-[-3.25rem] top-6 z-10 hidden h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-navy/30 bg-paper min-[1400px]:flex"
-      >
-        <svg viewBox={riderBike.viewBox} class="rider-bike h-4 w-4" aria-hidden="true">
-          <path d={riderBike.d} fill="var(--color-carmin)" />
-        </svg>
-        <svg viewBox={riderHike.viewBox} class="rider-hike hidden h-4 w-4" aria-hidden="true">
-          <path d={riderHike.d} fill="var(--color-sapin)" />
-        </svg>
-      </div>
+        class="absolute left-[-3.25rem] top-6 z-10 hidden h-7 w-7 -translate-x-1/2 -translate-y-1/2 min-[1400px]:flex"
+        iconClass="h-4 w-4"
+      />
       {
         tours.map((tour, ti) => {
           const cover = coverFor(tour);
-          const accent = accentText(tour.mode);
           return (
             <li
               id={`y${tour.year}`}
@@ -207,64 +183,21 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
                       {tour.description}
                     </p>
                   )}
-                  <div class="font-mono mt-5 grid max-w-sm grid-cols-3">
-                    {[
-                      [`${Math.round(tour.totals.distanceKm)}km`, "distance", ICONS.route.d, "fa", ICONS.route.viewBox],
-                      [`${tour.totals.gainM}mD+`, "dénivelé", ICONS.mountain.d, "fa", ICONS.mountain.viewBox],
-                      [formatHours(tour.totals.movingS), "effort", moveIcon(tour.mode).d, "fa", moveIcon(tour.mode).viewBox],
-                    ].map(([value, label, icon, extra, vb], i) => (
-                      <div class={`text-center ${i > 0 ? "border-l border-navy/20" : ""}`}>
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox={vb ?? "0 0 16 16"} preserveAspectRatio="xMidYMax meet"
-                          fill="none"
-                          class="stroke-navy mx-auto mb-1"
-                          stroke-width="1.3"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          aria-hidden="true"
-                        >
-                          {extra === "dot" && <circle cx="2.5" cy="13" r="1.2" class="fill-navy" stroke="none" />}
-                          <path d={icon} {...(extra === "fa" ? { class: "fill-navy", stroke: "none" } : {})} />
-                        </svg>
-                        <div class={`text-[12px] font-medium ${accent}`}>{value}</div>
-                        <div class="mt-0.5 text-[8px] uppercase tracking-[0.14em] text-navy">{label}</div>
-                      </div>
-                    ))}
-                  </div>
+                  <StatCells
+                    items={cardStats(tour)}
+                    class="mt-5 grid max-w-sm grid-cols-3"
+                    valueClass={`text-[12px] ${accentText(tour.mode)}`}
+                  />
                 </div>
                 {cover && (
                   <div class="hidden self-center sm:block">
-                    <!-- Tirage d'album : photo légèrement de travers (collée à
-                         la main), tenue par quatre coins blancs — la carte
-                         fait office de page d'album. Les coins tournent avec
-                         le tirage (physiquement, ils le tiennent). -->
-                    <div class="relative" style={`transform: rotate(${TILTS[ti % TILTS.length]}deg)`}>
-                      <div class="border border-navy/15 bg-white p-1.5 shadow-sm shadow-navy/10">
-                        <Image
-                          src={cover}
-                          width={560}
-                          widths={[280, 560]}
-                          sizes="210px"
-                          alt=""
-                          loading={ti === 0 ? "eager" : "lazy"}
-                          fetchpriority={ti === 0 ? "high" : "auto"}
-                          class="aspect-square w-full object-cover"
-                        />
-                      </div>
-                      {[
-                        "left-[-3px] top-[-3px]",
-                        "right-[-3px] top-[-3px] rotate-90",
-                        "right-[-3px] bottom-[-3px] rotate-180",
-                        "left-[-3px] bottom-[-3px] -rotate-90",
-                      ].map((pos) => (
-                        <span aria-hidden="true" class={`pointer-events-none absolute h-6 w-6 ${pos}`}>
-                          <span class="absolute inset-0 bg-navy/25 [clip-path:polygon(0_0,100%_0,0_100%)]" />
-                          <span class="absolute inset-0 bg-white [clip-path:polygon(0_0,calc(100%_-_1.5px)_0,0_calc(100%_-_1.5px))]" />
-                        </span>
-                      ))}
-                    </div>
+                    <AlbumPrint
+                      src={cover}
+                      tilt={TILTS[ti % TILTS.length]}
+                      widths={[280, 560]}
+                      sizes="210px"
+                      eager={ti === 0}
+                    />
                   </div>
                 )}
               </a>
@@ -277,116 +210,6 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
 </Base>
 
 <script>
-  // Voyageurs de la timeline — desktop : le long du fil vertical ; mobile :
-  // sur la bordure basse de la nav des années (avec lien de l'année active).
-  // Les deux suivent le centre du viewport en ressort amorti (accélération
-  // puis décélération, léger dépassement ~4 %), picto et couleur du mode de
-  // la carte en regard, masqués hors des cartes.
-  const ol = document.getElementById("timeline");
-  if (ol) {
-    const items = [...ol.querySelectorAll<HTMLElement>(".timeline-item")];
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
-    // Ressort amorti : la vitesse s'accumule (accélération au départ) puis
-    // s'amortit (décélération à l'arrivée) — plus fluide qu'un simple lerp.
-    const mkLerp = (apply: (v: number) => void) => {
-      let target = 0;
-      let cur = 0;
-      let vel = 0;
-      let raf = 0;
-      const step = () => {
-        vel += (target - cur) * 0.06;
-        vel *= 0.72;
-        cur += vel;
-        if (Math.abs(target - cur) < 0.3 && Math.abs(vel) < 0.3) {
-          cur = target;
-          vel = 0;
-          raf = 0;
-        } else {
-          raf = requestAnimationFrame(step);
-        }
-        apply(cur);
-      };
-      return {
-        to(v: number) {
-          target = v;
-          if (reduced.matches) {
-            cur = v;
-            vel = 0;
-            apply(v);
-          } else if (!raf) {
-            raf = requestAnimationFrame(step);
-          }
-        },
-        settle() {
-          cur = target;
-          vel = 0;
-          apply(cur);
-        },
-      };
-    };
-    const setIcon = (root: HTMLElement, mode?: string) => {
-      root.querySelector(".rider-bike")?.classList.toggle("hidden", mode !== "vélo");
-      root.querySelector(".rider-hike")?.classList.toggle("hidden", mode === "vélo");
-    };
-
-    const rider = document.getElementById("tl-rider");
-    const tlLerp = rider ? mkLerp((v) => (rider.style.top = `${v}px`)) : null;
-    const PAD = 24; // le fil s'arrête à 1.5rem des bords du <ol> (top-6/bottom-6)
-
-    const nav = document.getElementById("year-nav");
-    const ynRider = document.getElementById("yn-rider");
-    const links = nav ? [...nav.querySelectorAll<HTMLElement>(".yn-link")] : [];
-    const ynLerp = ynRider ? mkLerp((v) => (ynRider.style.left = `${v}px`)) : null;
-    const X_PAD = 20; // le voyageur mobile ne colle pas aux bords de la nav
-    let lastActive: HTMLElement | null = null;
-
-    const update = () => {
-      const rect = ol.getBoundingClientRect();
-      const center = window.innerHeight / 2;
-      // Carte dont la zone verticale contient le centre du viewport. Aucune
-      // (avant la timeline, ou tout en bas) : voyageurs masqués — pas de
-      // picto par défaut qui recouvrirait la flèche du fil.
-      const cur = items.find((li) => {
-        const r = li.getBoundingClientRect();
-        return center >= r.top - 16 && center < r.bottom + 16;
-      });
-      if (rider && tlLerp) {
-        rider.style.visibility = cur ? "visible" : "hidden";
-        // L'année en regard du voyageur prend l'effet hover (accent + zoom).
-        items.forEach((li) => li.classList.toggle("is-current", li === cur));
-        if (cur) {
-          tlLerp.to(clamp(center - rect.top, PAD, rect.height - PAD));
-          setIcon(rider, cur.dataset.mode);
-        }
-      }
-      if (nav && ynRider && ynLerp && nav.offsetWidth) {
-        links.forEach((l) =>
-          l.classList.toggle("is-active", !!cur && l.dataset.year === cur.id.slice(1))
-        );
-        // Rangée défilante : recentre l'année active quand elle change.
-        const active = cur ? links.find((l) => l.dataset.year === cur.id.slice(1)) : null;
-        if (active && active !== lastActive) {
-          lastActive = active;
-          const sc = active.parentElement!;
-          sc.scrollTo({
-            left: active.offsetLeft - (sc.clientWidth - active.offsetWidth) / 2,
-            behavior: "smooth",
-          });
-        }
-        ynRider.style.visibility = cur ? "visible" : "hidden";
-        if (cur) {
-          const p = clamp((center - rect.top) / rect.height, 0, 1);
-          ynLerp.to(X_PAD + p * (nav.offsetWidth - 2 * X_PAD));
-          setIcon(ynRider, cur.dataset.mode);
-        }
-      }
-    };
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    // Position de départ sans traîne (chargement en milieu de page, #y…).
-    update();
-    tlLerp?.settle();
-    ynLerp?.settle();
-  }
+  import { initTimeline } from "../scripts/timeline";
+  initTimeline();
 </script>

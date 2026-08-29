@@ -1,0 +1,62 @@
+---
+/**
+ * Tirage d'album photo : image en retrait sur fond blanc (bordure navy/15,
+ * ombre douce), tenue par quatre coins blancs (double triangle clip-path,
+ * liseré navy/25 sur l'hypoténuse), légèrement inclinée — album collé à la
+ * main. Utilisé par les cartes de la homepage et la page à propos.
+ * Anatomie : docs/AGENT-DESIGN-DNA.md §9.
+ */
+import { Image } from "astro:assets";
+
+interface Props {
+  src: ImageMetadata;
+  /** Inclinaison en degrés (déterministe côté appelant). */
+  tilt: number;
+  widths: number[];
+  sizes: string;
+  /** Classes de l'<img> (ratio, filtres… ex. grayscale). */
+  imgClass?: string;
+  eager?: boolean;
+  alt?: string;
+}
+const {
+  src,
+  tilt,
+  widths,
+  sizes,
+  imgClass = "aspect-square w-full object-cover",
+  eager = false,
+  alt = "",
+} = Astro.props;
+
+// Positions des quatre coins qui tiennent le tirage.
+const CORNERS = [
+  "left-[-3px] top-[-3px]",
+  "right-[-3px] top-[-3px] rotate-90",
+  "right-[-3px] bottom-[-3px] rotate-180",
+  "left-[-3px] bottom-[-3px] -rotate-90",
+];
+---
+
+<div class="relative" style={`transform: rotate(${tilt}deg)`}>
+  <div class="border border-navy/15 bg-white p-1.5 shadow-sm shadow-navy/10">
+    <Image
+      src={src}
+      width={widths.at(-1)}
+      widths={widths}
+      sizes={sizes}
+      alt={alt}
+      loading={eager ? "eager" : "lazy"}
+      fetchpriority={eager ? "high" : "auto"}
+      class={imgClass}
+    />
+  </div>
+  {
+    CORNERS.map((pos) => (
+      <span aria-hidden="true" class={`pointer-events-none absolute h-6 w-6 ${pos}`}>
+        <span class="absolute inset-0 bg-navy/25 [clip-path:polygon(0_0,100%_0,0_100%)]" />
+        <span class="absolute inset-0 bg-white [clip-path:polygon(0_0,calc(100%_-_1.5px)_0,0_calc(100%_-_1.5px))]" />
+      </span>
+    ))
+  }
+</div>

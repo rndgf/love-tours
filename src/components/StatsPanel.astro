@@ -1,0 +1,63 @@
+---
+/**
+ * Cartouche de relevés façon atlas : <dl> bordé haut/bas (1 px navy),
+ * colonnes égales séparées de filets navy/20, fond en dégradé blanc qui
+ * s'évanouit sur les côtés, valeurs mono 2xl/3xl animées (.stat-count),
+ * labels mono 9 px. Utilisé par la homepage (stats globales, 5 colonnes)
+ * et la page détail (stats d'édition, 4 colonnes, valeurs à l'accent du
+ * mode) — anatomie décrite dans docs/AGENT-DESIGN-DNA.md §5.1.
+ *
+ * Mobile : grille 2 colonnes ; les cellules `hideMobile` disparaissent et
+ * les filets sont recalculés sur les cellules restantes (verticaux sur la
+ * colonne droite, horizontaux dès la 2e rangée).
+ */
+interface Item {
+  value: string | number;
+  label: string;
+  /** Unité collée à la valeur, en plus petit (« km », « m »). */
+  unit?: string;
+  /** Cellule desktop seulement (« jours dehors » sur la homepage). */
+  hideMobile?: boolean;
+}
+interface Props {
+  items: Item[];
+  /** Classes des colonnes desktop (ex. "sm:grid-cols-5"). */
+  cols: string;
+  /** Classe de couleur des valeurs (navy sur la HP, accent du mode en détail). */
+  valueClass: string;
+  id?: string;
+  class?: string;
+}
+const { items, cols, valueClass, id, class: className = "" } = Astro.props;
+
+// Index mobile de chaque cellule visible (les cachées ne comptent pas) :
+// pilote les filets de la grille 2 colonnes.
+let mi = 0;
+const cells = items.map((item) => {
+  const m = item.hideMobile ? -1 : mi++;
+  return { ...item, borderL: m % 2 === 1, borderT: m >= 2 };
+});
+---
+
+<dl
+  id={id}
+  class={`grid grid-cols-2 border-y border-navy ${cols} ${className}`}
+  style="background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 14%, rgba(255,255,255,0.6) 86%, rgba(255,255,255,0) 100%);"
+>
+  {
+    cells.map((cell, i) => (
+      <div
+        class={`border-navy/20 px-3 py-4 text-center sm:px-4 sm:py-5
+          ${cell.borderL ? "border-l" : ""} ${cell.borderT ? "border-t sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""} ${cell.hideMobile ? "hidden sm:block" : ""}`}
+      >
+        <dd class={`font-mono text-2xl font-medium sm:text-3xl ${valueClass}`}>
+          <span class="stat-count">{cell.value}</span>
+          {cell.unit && <span class="text-base sm:text-lg">{cell.unit}</span>}
+        </dd>
+        <dt class="font-mono mt-1 text-[9px] uppercase tracking-[0.18em] text-navy">
+          {cell.label}
+        </dt>
+      </div>
+    ))
+  }
+</dl>

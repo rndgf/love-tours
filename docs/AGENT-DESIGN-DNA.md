@@ -67,6 +67,7 @@ Trois familles, toutes auto-hébergées (npm `@fontsource`) :
 | **Fraunces Variable** (serif éditoriale) | titres, années, wordmark, coordonnées | `font-display`, `font-semibold`, `tracking-tight` |
 | **Inter Variable** | texte courant | défaut `body` |
 | **IBM Plex Mono** 400/500/700 | **tout ce qui est « donnée » ou « instrument »** : stats, labels, kickers, boutons, nav, footer | `font-mono` |
+| **Rock Salt** (manuscrite) | légendes de polaroid uniquement (page à propos) — importée par la page qui s'en sert, pas par le layout | `font-hand` |
 
 Codes typographiques :
 - Les labels/kickers mono sont TOUJOURS en `uppercase` + lettrage large :
@@ -149,7 +150,7 @@ Codes typographiques :
 ## 6. Iconographie
 
 - **Font Awesome Free 6** (licence CC BY 4.0), tracés embarqués en dur dans
-  `src/lib/pictos.js` (`route`, `mountain`, `clock`) et `src/lib/mode.js`
+  `src/lib/icons.js` (`route`, `mountain`, `clock`) et `src/lib/mode.js`
   (`person-biking`, `person-hiking`) — pas de dépendance ni de fonte.
 - Rendu : aplat `fill-navy` (ou couleur d'accent pour les voyageurs),
   **14 px partout**, `viewBox` propre à chaque icône,
@@ -212,7 +213,8 @@ neutralise tout (cf. AGENT-SITE.md §6).
   marge gauche : rail à `-3.25rem`, année à `-8.25rem`, largeur 16).
 - Grille de carte HP desktop : `sm:grid-cols-[210px_1fr_210px]`
   (minimap / texte / photo carrée) ; sans photo `[230px_1fr]`.
-- Photo de carte HP desktop : **tirage d'album** — photo en retrait sur fond
+- Photo de carte HP desktop et portrait de la page à propos : **tirage
+  d'album** (composant `AlbumPrint.astro`) — photo en retrait sur fond
   blanc (`p-1.5`, bordure `navy/15`, ombre `shadow-sm navy/10`), tenue par
   quatre coins blancs (double triangle `clip-path`, liseré `navy/25` de
   1,5 px sur l'hypoténuse, débord 3 px), le tout incliné par carte

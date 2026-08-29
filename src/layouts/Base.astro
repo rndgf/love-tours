@@ -16,6 +16,14 @@ interface Props {
 const { title, description = "Nos étés à deux, à vélo ou à pied, depuis 2021." } = Astro.props;
 const firstYear = tours.length ? Math.min(...tours.map((t) => t.year)) : new Date().getFullYear();
 const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date().getFullYear();
+
+// Onde pointillée irrégulière de la bordure haute du footer (motif 600×20,
+// tracé à la main — pas de motif régulier, exigence design).
+// url("…") : encodeURIComponent laisse les apostrophes brutes, interdites
+// dans un url() CSS non guillemété.
+const FOOTER_WAVE = `url("data:image/svg+xml,${encodeURIComponent(
+  "<svg xmlns='http://www.w3.org/2000/svg' width='600' height='20' viewBox='0 0 600 20'><path d='M0,10 C40,2 70,16 110,9 C150,3 185,18 230,12 C275,6 300,3 350,11 C395,18 430,4 480,7 C525,10 565,15 600,10' fill='none' stroke='#1e2f4d' stroke-opacity='0.5' stroke-width='1.6' stroke-dasharray='0.5 6.5' stroke-linecap='round'/></svg>",
+)}")`;
 ---
 
 <!doctype html>
@@ -30,7 +38,9 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
          cœur papier — un seul signe, lisible en 16 px. -->
     <link rel="icon" href={`data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#1e2f4d"/><path d="M18 27.5 C10.2 21.4 8.2 16.6 12 13.2 C14.7 10.8 17.45 12.8 18 14.9 C18.55 12.8 21.3 10.8 24 13.2 C27.8 16.6 25.8 21.4 18 27.5 Z" fill="#faf6ee"/></svg>')}`} />
   </head>
-  <body class="relative min-h-screen antialiased">
+  <!-- Colonne flex pleine hauteur : le footer reste ferré en bas même sur
+       les pages courtes (à propos, 404), main absorbe l'espace restant. -->
+  <body class="relative flex min-h-screen flex-col antialiased">
     <!-- Fond cartographique réel : côtes de la Manche, Seine et Loire, traces des
          Love Tours — centré sur la maison (Sotteville-lès-Rouen).
          absolute + sticky (PAS fixed : un fixed inset-0 déborde sous la barre
@@ -66,23 +76,22 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
       </nav>
     </header>
 
-    <main>
+    <main class="flex-1">
       <slot />
     </main>
 
     <footer class="relative mt-16 bg-paper/80 sm:mt-24">
       <!-- Bordure haute en trois morceaux : deux segments + arc qui épouse le
            médaillon sans l'entourer. -->
-      <span
-        aria-hidden="true"
-        class="absolute left-0 top-[-10px] h-5 w-[calc(50%-38px)]"
-        style="background-image: url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27600%27%20height%3D%2720%27%20viewBox%3D%270%200%20600%2020%27%3E%3Cpath%20d%3D%27M0%2C10%20C40%2C2%2070%2C16%20110%2C9%20C150%2C3%20185%2C18%20230%2C12%20C275%2C6%20300%2C3%20350%2C11%20C395%2C18%20430%2C4%20480%2C7%20C525%2C10%20565%2C15%20600%2C10%27%20fill%3D%27none%27%20stroke%3D%27%231e2f4d%27%20stroke-opacity%3D%270.5%27%20stroke-width%3D%271.6%27%20stroke-dasharray%3D%270.5%206.5%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E); background-repeat: repeat-x;"
-      />
-      <span
-        aria-hidden="true"
-        class="absolute right-0 top-[-10px] h-5 w-[calc(50%-38px)]"
-        style="background-image: url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27600%27%20height%3D%2720%27%20viewBox%3D%270%200%20600%2020%27%3E%3Cpath%20d%3D%27M0%2C10%20C40%2C2%2070%2C16%20110%2C9%20C150%2C3%20185%2C18%20230%2C12%20C275%2C6%20300%2C3%20350%2C11%20C395%2C18%20430%2C4%20480%2C7%20C525%2C10%20565%2C15%20600%2C10%27%20fill%3D%27none%27%20stroke%3D%27%231e2f4d%27%20stroke-opacity%3D%270.5%27%20stroke-width%3D%271.6%27%20stroke-dasharray%3D%270.5%206.5%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E); background-repeat: repeat-x;"
-      />
+      {
+        ["left-0", "right-0"].map((side) => (
+          <span
+            aria-hidden="true"
+            class={`absolute top-[-10px] h-5 w-[calc(50%-38px)] ${side}`}
+            style={`background-image: ${FOOTER_WAVE}; background-repeat: repeat-x;`}
+          />
+        ))
+      }
       <svg
         aria-hidden="true"
         viewBox="0 0 76 38"
@@ -126,86 +135,24 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
           <span aria-hidden="true" class="pointer-events-none absolute -bottom-7 -right-2 select-none text-5xl not-italic leading-none text-navy/15 sm:-right-9">»</span>
         </p>
         <p class="font-mono text-[9px] uppercase tracking-[0.18em] text-navy">
-          {firstYear}–{lastYear} · Site par <a href="https://www.renaudgouffe.fr/" target="_blank" rel="noopener" class="underline decoration-navy/30 underline-offset-2 transition hover:text-laiton">rndgf</a>
+          {firstYear}–{lastYear} · <a href="/a-propos/" class="underline decoration-navy/30 underline-offset-2 transition hover:text-laiton">à propos</a> · Site par <a href="https://www.renaudgouffe.fr/" target="_blank" rel="noopener" class="underline decoration-navy/30 underline-offset-2 transition hover:text-laiton">rndgf</a>
         </p>
       </div>
     </footer>
     <script>
-      import Lenis from "lenis";
+      import { initSmoothScroll, scrollToTop } from "../scripts/smooth-scroll";
+      import { initStatCounters } from "../scripts/stat-counters";
 
-      // Défilement global lissé (inertie). anchors: true reprend les liens
-      // d'ancre (#y2021, #jN…). Désactivé si l'utilisateur préfère réduire
-      // les animations, et sous 640 px : le scroll tactile mobile est déjà
-      // inertiel nativement — Lenis n'y apporterait que du main thread.
-      if (
-        !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
-        window.matchMedia("(min-width: 640px)").matches
-      ) {
-        const lenis = new Lenis({ autoRaf: true, anchors: true });
-        (window as any).lenis = lenis;
-      }
+      initSmoothScroll();
+      initStatCounters();
 
       // Médaillon du footer : lien vers l'accueil. Déjà sur l'accueil :
       // remontée douce plutôt qu'un rechargement de page.
       document.getElementById("footer-top")?.addEventListener("click", (e) => {
         if (location.pathname !== "/") return;
         e.preventDefault();
-        const lenis = (window as any).lenis;
-        if (lenis) lenis.scrollTo(0);
-        else window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollToTop();
       });
-
-      // Compteurs des cartouches de stats (.stat-count) : au premier
-      // affichage, chaque nombre défile de 0 jusqu'à sa valeur (décélération
-      // en fin de course). Les caractères non numériques (« h » de l'effort)
-      // restent fixes ; un segment écrit avec zéro initial (« 05 ») garde sa
-      // largeur (padStart), les autres s'allongent naturellement.
-      const counters = document.querySelectorAll<HTMLElement>(".stat-count");
-      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        const countUp = (el: HTMLElement) => {
-          const final = el.textContent ?? "";
-          // Découpe en segments : suites de chiffres (animées) / reste (fixe).
-          const parts = final.match(/\d+|\D+/g) ?? [];
-          const DURATION = 1200;
-          let start = 0;
-          // Une seule animation par élément : la nouvelle annule la précédente
-          // (sinon deux boucles rAF se disputeraient le texte).
-          cancelAnimationFrame((el as any).__cuRaf ?? 0);
-          const step = (t: number) => {
-            if (!start) start = t;
-            const p = Math.min((t - start) / DURATION, 1);
-            const eased = 1 - Math.pow(1 - p, 3);
-            el.textContent = parts
-              .map((seg) => {
-                if (!/^\d/.test(seg)) return seg;
-                const shown = String(Math.round(parseInt(seg, 10) * eased));
-                return seg.startsWith("0") ? shown.padStart(seg.length, "0") : shown;
-              })
-              .join("");
-            if (p < 1) (el as any).__cuRaf = requestAnimationFrame(step);
-            else el.textContent = final;
-          };
-          (el as any).__cuRaf = requestAnimationFrame(step);
-        };
-        // Exposé aux pages : la page détail relance l'animation quand le
-        // cartouche change de valeurs (clic sur un jour) — y compris quand
-        // les spans .stat-count ont déjà été remplacés (deep-link #jN).
-        (window as any).statCountUp = countUp;
-        if (counters.length) {
-          const io = new IntersectionObserver(
-            (entries) => {
-              for (const e of entries) {
-                if (e.isIntersecting) {
-                  io.unobserve(e.target);
-                  countUp(e.target as HTMLElement);
-                }
-              }
-            },
-            { threshold: 0.4 }
-          );
-          counters.forEach((el) => io.observe(el));
-        }
-      }
     </script>
   </body>
 </html>

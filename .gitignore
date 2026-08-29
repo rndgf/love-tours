@@ -7,6 +7,7 @@ dist/
 # (ancré à la racine : data/editions/ — copie des edition.json — est versionné)
 /editions/
 src/assets/tours/
+src/assets/about/
 
 # Données Natural Earth (28 Mo, retéléchargeables — voir README)
 data/naturalearth/

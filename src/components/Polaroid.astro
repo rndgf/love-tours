@@ -1,0 +1,59 @@
+---
+/**
+ * Polaroid au vrai format : photo carrée (79×79 mm dans une carte
+ * 88×107 mm → bords ~5 % de la largeur, marge basse ~26 %), cadre blanc,
+ * ombre douce, légèrement penché. Recadrage carré par object-cover ;
+ * `imgClass` permet d'ancrer le cadrage (object-top, object-left…).
+ * Utilisé par la page à propos et la page 404.
+ */
+import { Image } from "astro:assets";
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  /** Inclinaison en degrés. */
+  tilt: number;
+  /** Légende manuscrite dans la marge basse (Rock Salt : l'appelant importe
+   *  `@fontsource/rock-salt` pour ne charger la fonte que là où elle sert). */
+  caption?: string;
+  /** Classes du conteneur (largeur, marges). */
+  class?: string;
+  /** Classes d'ancrage du recadrage (object-top…). */
+  imgClass?: string;
+  sizes: string;
+  widths: number[];
+  eager?: boolean;
+}
+const {
+  src,
+  alt,
+  tilt,
+  caption,
+  class: className = "",
+  imgClass = "",
+  sizes,
+  widths,
+  eager = false,
+} = Astro.props;
+---
+
+<div
+  class={`border border-navy/15 bg-white p-[5%] shadow-md shadow-navy/15 ${className}`}
+  style={`transform: rotate(${tilt}deg)`}
+>
+  <Image
+    src={src}
+    width={widths.at(-1)}
+    widths={widths}
+    sizes={sizes}
+    alt={alt}
+    loading={eager ? "eager" : "lazy"}
+    fetchpriority={eager ? "high" : "auto"}
+    class={`aspect-square w-full object-cover ${imgClass}`}
+  />
+  <!-- Marge basse du polaroid (26 % − 5 % de padding = bande de 21 %
+       de la largeur), légende centrée dedans le cas échéant -->
+  <p class="font-hand flex aspect-[100/21] w-full items-center justify-center text-[13px] text-ink">
+    {caption}
+  </p>
+</div>
