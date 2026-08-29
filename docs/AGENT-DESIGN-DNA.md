@@ -137,7 +137,10 @@ Codes typographiques :
    `M0,10 C40,2 70,16 110,9 C150,3 185,18 230,12 C275,6 300,3 350,11
    C395,18 430,4 480,7 C525,10 565,15 600,10` sur 600×20, même dasharray,
    opacité 50 %, en deux segments + arc `M2 36.5 A36 36 0 0 1 74 36.5`
-   (76×38) qui épouse le médaillon sans l'entourer.
+   (76×38) qui épouse le médaillon sans l'entourer. Le motif vit dans la
+   classe `.wave-line` (global.css), partagée avec la bordure basse de la
+   nav mobile des années quand elle est collée en haut (fondu 0,25 s,
+   bordure rectiligne rendue transparente).
 5. **Filigrane d'année** : année géante quasi invisible derrière l'en-tête
    de chaque page détail (voir §3). Retiré des cartes de la homepage
    (l'année y vit sur le fil de timeline et dans la nav mobile).

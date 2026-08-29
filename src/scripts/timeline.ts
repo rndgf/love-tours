@@ -20,6 +20,47 @@ const ZONE_PAD = 16;
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
+/**
+ * Hauteur de l'onde pointillée (.wave-line, motif 600×20 centré sur y=10)
+ * en fonction de x : mêmes segments de Bézier cubiques que le SVG, pour que
+ * le voyageur mobile épouse la courbe quand la nav est collée en haut.
+ */
+const WAVE_SEGMENTS: [number, number][][] = [
+  [[0, 10], [40, 2], [70, 16], [110, 9]],
+  [[110, 9], [150, 3], [185, 18], [230, 12]],
+  [[230, 12], [275, 6], [300, 3], [350, 11]],
+  [[350, 11], [395, 18], [430, 4], [480, 7]],
+  [[480, 7], [525, 10], [565, 15], [600, 10]],
+];
+const WAVE_TABLE = (() => {
+  const table = new Float32Array(600);
+  const filled = new Uint8Array(600);
+  for (const [p0, p1, p2, p3] of WAVE_SEGMENTS) {
+    // Échantillonnage fin, puis comblement des indices manqués : un trou
+    // dans la table ferait sauter le voyageur au passage.
+    for (let t = 0; t <= 1.0001; t += 0.002) {
+      const u = 1 - t;
+      const x = u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0];
+      const y = u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1];
+      const i = clamp(Math.round(x), 0, 599);
+      table[i] = y;
+      filled[i] = 1;
+    }
+  }
+  for (let i = 0; i < 600; i++) if (!filled[i]) table[i] = table[i > 0 ? i - 1 : 0];
+  return table;
+})();
+/** Écart vertical de l'onde vs la ligne droite, en px, à x px — interpolé
+ *  entre deux indices pour un déplacement sans marche d'escalier. */
+const waveOffset = (x: number) => {
+  const wrapped = ((x % 600) + 600) % 600;
+  const i = Math.floor(wrapped);
+  const frac = wrapped - i;
+  const a = WAVE_TABLE[i];
+  const b = WAVE_TABLE[(i + 1) % 600];
+  return a + (b - a) * frac - 10;
+};
+
 type Spring = { to(v: number): void; settle(): void };
 
 function makeSpring(apply: (v: number) => void): Spring {
@@ -77,7 +118,19 @@ export function initTimeline(): void {
   const nav = document.getElementById("year-nav");
   const navRider = document.getElementById("yn-rider");
   const links = nav ? [...nav.querySelectorAll<HTMLElement>(".yn-link")] : [];
-  const navSpring = navRider ? makeSpring((v) => (navRider.style.left = `${v}px`)) : null;
+  // Position du voyageur mobile : x le long de la nav, et y qui suit l'onde
+  // de la bordure basse quand la nav est collée (classe .is-stuck).
+  // transform (composité, sous-pixel) plutôt que left/margin (layout à
+  // chaque frame → saccades) ; se compose avec le translate -50%/-50% des
+  // classes (propriété `translate`, appliquée avant `transform`).
+  let navX = 0;
+  const applyNavRider = (x: number) => {
+    if (!navRider) return;
+    navX = x;
+    const y = nav?.classList.contains("is-stuck") ? waveOffset(x) : 0;
+    navRider.style.transform = `translate(${x}px, ${y}px)`;
+  };
+  const navSpring = navRider ? makeSpring(applyNavRider) : null;
   let lastActive: HTMLElement | null = null;
 
   const update = () => {
@@ -120,6 +173,17 @@ export function initTimeline(): void {
 
     // — Mobile : nav des années —
     if (nav && navRider && navSpring && nav.offsetWidth) {
+      // Collée en haut : la bordure basse devient l'onde (voir global.css),
+      // le voyageur en suit la courbe. Ré-application immédiate : le spring
+      // ne rejoue pas apply() si le voyageur est immobile au basculement.
+      const wasStuck = nav.classList.contains("is-stuck");
+      // Réellement collée en haut : ombre renforcée + fond plus opaque.
+      nav.classList.toggle("is-pinned", nav.getBoundingClientRect().top <= 0.5);
+      const isStuck = nav.classList.contains("is-pinned");
+      if (isStuck !== wasStuck) {
+        nav.classList.toggle("is-stuck", isStuck);
+        applyNavRider(navX);
+      }
       links.forEach((l) =>
         l.classList.toggle("is-active", !!cur && l.dataset.year === cur.id.slice(1)),
       );
@@ -133,7 +197,9 @@ export function initTimeline(): void {
           behavior: "smooth",
         });
       }
-      navRider.style.visibility = cur ? "visible" : "hidden";
+      // Le voyageur n'apparaît qu'avec l'onde (nav collée) : pas de picto
+      // posé sur la bordure rectiligne au repos.
+      navRider.style.visibility = cur && isStuck ? "visible" : "hidden";
       if (cur) {
         const p = clamp((center - rect.top) / rect.height, 0, 1);
         navSpring.to(NAV_PAD + p * (nav.offsetWidth - 2 * NAV_PAD));

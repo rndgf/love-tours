@@ -70,7 +70,7 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
   <nav
     id="year-nav"
     aria-label="Aller à une année"
-    class="font-mono sticky top-0 z-20 mt-10 border-y border-navy bg-paper/95 backdrop-blur-sm sm:hidden"
+    class="font-mono sticky top-0 z-20 mt-10 border-y border-navy sm:hidden"
   >
     <!-- Une seule ligne : défilement horizontal (barre masquée), liens
          centrés tant que ça tient (marges auto aux extrémités). -->
@@ -88,8 +88,13 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
         ))
       }
     </div>
-    <!-- Voyageur mobile : glisse sur la bordure basse de la nav au rythme de
-         la progression dans la timeline. -->
+    <!-- Bordure basse ondulée quand la nav est collée en haut (le chemin) -->
+    <span
+      aria-hidden="true"
+      class="yn-wave wave-line pointer-events-none absolute inset-x-0 top-full h-5 -translate-y-1/2"
+    />
+    <!-- Voyageur mobile : glisse le long de la bordure basse (rectiligne au
+         repos, sinueuse quand la nav est collée — il suit la courbe). -->
     <TimelineRider
       id="yn-rider"
       hiddenAtLoad

@@ -17,13 +17,6 @@ const { title, description = "Nos étés à deux, à vélo ou à pied, depuis 20
 const firstYear = tours.length ? Math.min(...tours.map((t) => t.year)) : new Date().getFullYear();
 const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date().getFullYear();
 
-// Onde pointillée irrégulière de la bordure haute du footer (motif 600×20,
-// tracé à la main — pas de motif régulier, exigence design).
-// url("…") : encodeURIComponent laisse les apostrophes brutes, interdites
-// dans un url() CSS non guillemété.
-const FOOTER_WAVE = `url("data:image/svg+xml,${encodeURIComponent(
-  "<svg xmlns='http://www.w3.org/2000/svg' width='600' height='20' viewBox='0 0 600 20'><path d='M0,10 C40,2 70,16 110,9 C150,3 185,18 230,12 C275,6 300,3 350,11 C395,18 430,4 480,7 C525,10 565,15 600,10' fill='none' stroke='#1e2f4d' stroke-opacity='0.5' stroke-width='1.6' stroke-dasharray='0.5 6.5' stroke-linecap='round'/></svg>",
-)}")`;
 ---
 
 <!doctype html>
@@ -87,8 +80,7 @@ const FOOTER_WAVE = `url("data:image/svg+xml,${encodeURIComponent(
         ["left-0", "right-0"].map((side) => (
           <span
             aria-hidden="true"
-            class={`absolute top-[-10px] h-5 w-[calc(50%-38px)] ${side}`}
-            style={`background-image: ${FOOTER_WAVE}; background-repeat: repeat-x;`}
+            class={`wave-line absolute top-[-10px] h-5 w-[calc(50%-38px)] ${side}`}
           />
         ))
       }

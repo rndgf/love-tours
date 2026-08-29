@@ -113,6 +113,14 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
    centrés tant que ça tient, année active recentrée automatiquement au
    scroll de page), année active mise en évidence, voyageur miniature
    (voir §5.3). Tient sans dégradation à 13 éditions et plus.
+   **Collée en haut** (classe `is-stuck`) : la bordure basse rectiligne
+   s'efface au profit de l'onde pointillée du footer (`.wave-line`), le
+   voyageur suit la courbe (timeline.ts rejoue les segments de Bézier du
+   motif — table précalculée `WAVE_TABLE`, offset ±8 px), et le **fond de
+   la nav épouse l'onde** : fond porté par `::before` (papier 95 % + flou),
+   qui déborde de 10 px sous la boîte et se fait découper par un masque en
+   deux couches (rectangle + bande basse remplie au-dessus de la courbe,
+   même tracé) — aucun aplat rectiligne ne dépasse.
 4. **Timeline des éditions** : une carte par édition, ordre antichronologique.
    Desktop ≥ 1400 px : fil vertical pointillé à gauche avec flèche en tête
    (le voyage continue), année + point par carte, voyageur qui suit le

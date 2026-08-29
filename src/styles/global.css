@@ -53,6 +53,62 @@ body {
   background: color-mix(in srgb, var(--color-framboise) 25%, transparent);
 }
 
+/* Onde pointillée irrégulière (motif 600×20, tracé à la main) : bordures
+   hautes du footer et bordure basse de la nav des années quand elle est
+   collée en haut. Le voyageur mobile suit cette courbe (timeline.ts, qui
+   rejoue les mêmes segments de Bézier). */
+.wave-line {
+  background-image: url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27600%27%20height%3D%2720%27%20viewBox%3D%270%200%20600%2020%27%3E%3Cpath%20d%3D%27M0%2C10%20C40%2C2%2070%2C16%20110%2C9%20C150%2C3%20185%2C18%20230%2C12%20C275%2C6%20300%2C3%20350%2C11%20C395%2C18%20430%2C4%20480%2C7%20C525%2C10%20565%2C15%20600%2C10%27%20fill%3D%27none%27%20stroke%3D%27%231e2f4d%27%20stroke-opacity%3D%270.5%27%20stroke-width%3D%271.6%27%20stroke-dasharray%3D%270.5%206.5%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E);
+  background-repeat: repeat-x;
+}
+
+/* Nav des années collée en haut : la bordure basse rectiligne s'efface au
+   profit de l'onde (le chemin), même signature que le footer. */
+#year-nav .yn-wave {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+#year-nav.is-stuck {
+  border-bottom-color: transparent;
+  /* Ombre portée qui suit la courbe : posée sur la nav (pas sur ::before —
+     filter s'applique avant mask, l'ombre y serait rectangulaire ; ici elle
+     épouse la silhouette composite, fond découpé compris). Discrète au
+     repos, renforcée quand la nav est réellement collée (is-pinned). */
+  filter: drop-shadow(0 2px 3px rgba(30, 47, 77, 0.1));
+}
+#year-nav.is-pinned {
+  filter: drop-shadow(0 3px 5px rgba(30, 47, 77, 0.22));
+}
+#year-nav.is-pinned::before {
+  background: color-mix(in srgb, var(--color-paper) 90%, transparent);
+}
+
+/* Fond de la nav porté par ::before (le markup n'a pas d'utilitaires bg) :
+   au repos, aplat papier 95 % + flou, rectangulaire. Collée : le fond
+   déborde de 10 px sous la boîte et un masque en deux couches le découpe
+   LE LONG de l'onde (rectangle plein + bande basse remplie au-dessus de la
+   courbe, mêmes Bézier que .wave-line) — aucun aplat ne dépasse. */
+#year-nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--color-paper) 80%, transparent);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+#year-nav.is-stuck::before {
+  bottom: -10px;
+  mask-image: linear-gradient(#000, #000),
+    url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27600%27%20height%3D%2720%27%20viewBox%3D%270%200%20600%2020%27%3E%3Cpath%20d%3D%27M0%2C10%20C40%2C2%2070%2C16%20110%2C9%20C150%2C3%20185%2C18%20230%2C12%20C275%2C6%20300%2C3%20350%2C11%20C395%2C18%20430%2C4%20480%2C7%20C525%2C10%20565%2C15%20600%2C10%20L600%2C0%20L0%2C0%20Z%27%20fill%3D%27%23000%27%2F%3E%3C%2Fsvg%3E);
+  mask-size: 100% calc(100% - 20px), 600px 20px;
+  mask-position: top left, bottom left;
+  mask-repeat: no-repeat, repeat-x;
+}
+#year-nav.is-stuck .yn-wave {
+  opacity: 1;
+}
+
 /* Nav mobile des années : le lien de l'année dont la carte est à l'écran
    prend l'accent de son mode (--accent posée sur le lien). */
 .yn-link.is-active {
@@ -60,10 +116,16 @@ body {
   color: var(--color-paper);
 }
 /* Rangée d'années défilante : barre de scroll masquée (l'année active est
-   recentrée par script, la bordure basse + voyageur suffisent comme repère). */
+   recentrée par script, la bordure basse + voyageur suffisent comme repère).
+   Collée : marge basse élargie pour laisser respirer la courbe (au repos,
+   padding symétrique — la bordure est droite). */
 .yn-scroll {
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  transition: padding-bottom 0.25s ease;
+}
+#year-nav.is-stuck .yn-scroll {
+  padding-bottom: 1rem;
 }
 .yn-scroll::-webkit-scrollbar {
   display: none;
