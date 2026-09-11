@@ -2,7 +2,14 @@
 /**
  * Carte MapLibre : fond vectoriel OpenFreeMap (style Positron, sobre),
  * une ligne colorée par journée, chargée depuis public/tours/<slug>.geojson.
+ *
+ * CSS MapLibre importé ICI (statique, inliné dans les pages détail par
+ * inlineStylesheets: "always") et JAMAIS en import() dynamique : Astro ≥ 7.3
+ * référence alors un chunk CSS qu'il n'écrit pas dans dist/ → 404 en prod →
+ * le préchargement rejette et la carte ne s'initialise jamais (bug vécu).
  */
+import "maplibre-gl/dist/maplibre-gl.css";
+
 interface Props {
   slug: string;
   bbox: [number, number, number, number];
@@ -24,12 +31,10 @@ const { slug, bbox, days } = Astro.props;
   import { distM, LOOP_MAX_M } from "../lib/geo.js";
   import { parseDayHash } from "../lib/dayhash.js";
 
-  // MapLibre pèse ~1 Mo : chargé uniquement quand la carte approche du viewport.
+  // MapLibre pèse ~1 Mo : chargé uniquement quand la carte approche du
+  // viewport (son CSS, lui, est inliné dans la page — voir frontmatter).
   async function initMap(el: HTMLElement) {
-    const [{ default: maplibregl }] = await Promise.all([
-      import("maplibre-gl"),
-      import("maplibre-gl/dist/maplibre-gl.css"),
-    ]);
+    const { default: maplibregl } = await import("maplibre-gl");
     const slug = el.dataset.slug!;
     const bbox = JSON.parse(el.dataset.bbox!) as [number, number, number, number];
     const dayNumbers = JSON.parse(el.dataset.days!) as number[];

@@ -36,7 +36,7 @@
 |---|---|---|
 | Générateur | Astro 7 (statique, 6 pages) | site 100 % statique, aucune API serveur |
 | CSS | Tailwind 4 (`@theme` dans `src/styles/global.css`) | tokens de couleur/typo centralisés |
-| Carte interactive | MapLibre GL + fond OpenFreeMap *Positron* (gratuit, sans clé) | pas de clé API, pas de quota ; prévoir `map.on("error")` → message de repli |
+| Carte interactive | MapLibre GL + fond OpenFreeMap *Positron* (gratuit, sans clé) | pas de clé API, pas de quota ; prévoir `map.on("error")` → message de repli ; **le CSS MapLibre s'importe statiquement dans le frontmatter de `TourMap.astro`**, jamais en `import()` dynamique (Astro ≥ 7.3 + `inlineStylesheets: "always"` : chunk CSS référencé mais absent de `dist/` → 404 → carte morte en prod, bug vécu) |
 | Scroll lissé | Lenis ≥ 640 px | voir contraintes §5.1 |
 | Images | `astro:assets` (WebP, srcset) | photos optimisées au build, jamais les originaux servis |
 | CSS critique | `build.inlineStylesheets: "always"` | zéro requête CSS bloquante |

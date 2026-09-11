@@ -130,6 +130,16 @@ casser :
 Les compteurs des cartouches de stats s'animent via `window.statCountUp`
 (défini dans `Base.astro`, absent si `prefers-reduced-motion`).
 
+## Piège connu — CSS importé dynamiquement et `inlineStylesheets: "always"`
+
+Depuis Astro 7.3, un `import("….css")` dans un script client produit un
+bundle qui **référence** un chunk CSS jamais écrit dans `dist/` → 404 en
+prod, le préchargement Vite rejette et le module meurt avant d'exécuter quoi
+que ce soit (vécu : carte MapLibre morte en prod, saine en dev). Règle :
+tout CSS de dépendance s'importe **statiquement dans le frontmatter** du
+composant (il est alors inliné dans les pages concernées) — jamais via
+`import()` dynamique.
+
 ## Piège connu — dev server et images en 500
 
 Après un `npm install` ou une modification de `package.json`/`astro.config.mjs`,
