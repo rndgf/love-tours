@@ -5,7 +5,8 @@
   --color-paper: #faf6ee;
   --color-paper-deep: #f0e9d8;
   --color-ink: #23201a;
-  --color-ink-soft: #7a7160;
+  /* #716857 : 5,1:1 sur paper, 4,5:1 sur paper-deep (seuil WCAG AA) */
+  --color-ink-soft: #716857;
   /* Atlas : encre marine des cadres, carmin des traces */
   --color-navy: #1e2f4d;
   --color-carmin: #b3402f;
@@ -51,6 +52,41 @@ body {
 
 ::selection {
   background: color-mix(in srgb, var(--color-framboise) 25%, transparent);
+}
+
+/* Barre de défilement de la page aux couleurs de l'atlas (marine
+   translucide sur papier) ; largeur et comportement natifs conservés. */
+html {
+  scrollbar-color: color-mix(in srgb, var(--color-navy) 40%, transparent) var(--color-paper);
+}
+
+/* Focus clavier unique sur tout le site : trait laiton décalé, visible sur
+   papier comme sur photo. :focus-visible seul → aucun contour au clic souris.
+   En couche base : un utilitaire (outline-none de <main>) garde la main. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-laiton);
+    outline-offset: 3px;
+  }
+}
+
+/* Lien d'évitement (Base.astro) : hors écran jusqu'au premier Tab. */
+.skip-link {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 50;
+  padding: 0.5rem 0.9rem;
+  background: var(--color-navy);
+  color: var(--color-paper);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  translate: 0 -200%;
+}
+.skip-link:focus-visible {
+  translate: 0 0;
 }
 
 /* Onde pointillée irrégulière (motif 600×20, tracé à la main) : bordures
@@ -110,6 +146,46 @@ body {
   mask-position: top left, bottom left;
   mask-repeat: no-repeat, repeat-x;
 }
+/* Footer : fond papier 80 % découpé sous l'onde de sa bordure haute (même
+   masque en deux couches que #year-nav::before, bande tournée vers le bas :
+   remplie SOUS la courbe). La boîte .footer-sheet démarre 46 px au-dessus du
+   footer (place du disque) ; la bande d'onde est posée à 36 px, soit
+   10 px au-dessus du footer comme .footer-wave → même phase de motif, et le
+   rectangle plein démarre 20 px plus bas. L'ombre est un filtre
+   sur la boîte, le masque sur son ::before : filter s'applique avant mask,
+   posé sur le même élément il serait effacé par le découpage. */
+.footer-sheet {
+  filter: drop-shadow(0 -3px 5px rgba(30, 47, 77, 0.12));
+}
+/* Masque en trois couches : rectangle plein, bande remplie sous l'onde,
+   disque sous le médaillon. Disque de rayon 36 px = rayon de l'arc
+   pointillé, centré à 46,5 px du haut de la boîte = centre de l'arc : le
+   médaillon, sans fond propre, prend exactement la teinte du footer et les
+   pointillés courent sur le bord du disque. */
+.footer-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-paper) 80%, transparent);
+  mask-image: linear-gradient(#000, #000),
+    url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27600%27%20height%3D%2720%27%20viewBox%3D%270%200%20600%2020%27%3E%3Cpath%20d%3D%27M0%2C10%20C40%2C2%2070%2C16%20110%2C9%20C150%2C3%20185%2C18%20230%2C12%20C275%2C6%20300%2C3%20350%2C11%20C395%2C18%20430%2C4%20480%2C7%20C525%2C10%20565%2C15%20600%2C10%20L600%2C20%20L0%2C20%20Z%27%20fill%3D%27%23000%27%2F%3E%3C%2Fsvg%3E),
+    radial-gradient(circle 36.5px at 50% 46.5px, #000 36px, transparent 36.5px);
+  mask-size: 100% calc(100% - 56px), 600px 20px, 100% 100%;
+  mask-position: bottom left, left 0 top 36px, top left;
+  mask-repeat: no-repeat, repeat-x, no-repeat;
+}
+/* Onde du footer interrompue sur 76 px au centre : place de l'arc
+   pointillé du médaillon. */
+.footer-wave {
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(50% - 38px),
+    transparent calc(50% - 38px),
+    transparent calc(50% + 38px),
+    #000 calc(50% + 38px)
+  );
+}
+
 /* Nav mobile des années : le lien de l'année dont la carte est à l'écran
    prend l'accent de son mode (--accent posée sur le lien). */
 .yn-link.is-active {
@@ -207,6 +283,22 @@ body {
 .logo-live:focus-visible .amp-heart {
   opacity: 1;
   animation: seal-beat 1.8s ease-in-out infinite;
+}
+/* Mouvement réduit demandé par le système : plus aucune animation ni
+   transition décorative sur le site (battements du cœur, fondus, survols,
+   défilement doux des ancres). Les états finaux restent appliqués. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .logo-live .logo-wheel,

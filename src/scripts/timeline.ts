@@ -182,7 +182,7 @@ export function initTimeline(): void {
         const sc = active.parentElement!;
         sc.scrollTo({
           left: active.offsetLeft - (sc.clientWidth - active.offsetWidth) / 2,
-          behavior: "smooth",
+          behavior: prefersReducedMotion() ? "auto" : "smooth",
         });
       }
       navRider.style.visibility = cur ? "visible" : "hidden";

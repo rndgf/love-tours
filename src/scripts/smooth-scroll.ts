@@ -27,7 +27,7 @@ export function initSmoothScroll(): void {
 /** Remontée douce en haut de page (repli natif sans Lenis). */
 export function scrollToTop(): void {
   if (lenis) lenis.scrollTo(0);
-  else window.scrollTo({ top: 0, behavior: "smooth" });
+  else window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
 }
 
 /**
@@ -48,7 +48,7 @@ export function scrollToEl(el: HTMLElement, onArrive?: () => void): void {
     lenis.scrollTo(el, { offset, duration: 0.9, onComplete: arrive });
     if (onArrive) setTimeout(arrive, 1000);
   } else {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
     onArrive?.();
   }
 }

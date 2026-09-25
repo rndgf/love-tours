@@ -27,6 +27,8 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="robots" content="noindex, nofollow" />
+    <!-- Barre du navigateur mobile teintée papier, comme la page. -->
+    <meta name="theme-color" content="#faf6ee" />
     <!-- Favicon volontairement distinct du picto du header : pastille navy,
          cœur papier — un seul signe, lisible en 16 px. -->
     <link rel="icon" href={`data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#1e2f4d"/><path d="M18 27.5 C10.2 21.4 8.2 16.6 12 13.2 C14.7 10.8 17.45 12.8 18 14.9 C18.55 12.8 21.3 10.8 24 13.2 C27.8 16.6 25.8 21.4 18 27.5 Z" fill="#faf6ee"/></svg>')}`} />
@@ -34,6 +36,9 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
   <!-- Colonne flex pleine hauteur : le footer reste ferré en bas même sur
        les pages courtes (à propos, 404), main absorbe l'espace restant. -->
   <body class="relative flex min-h-screen flex-col antialiased">
+    <!-- Lien d'évitement : premier arrêt clavier, invisible hors focus.
+         Saute le header et mène droit au contenu. -->
+    <a href="#content" class="skip-link">Aller au contenu</a>
     <!-- Fond cartographique réel : côtes de la Manche, Seine et Loire, traces des
          Love Tours — centré sur la maison (Sotteville-lès-Rouen).
          absolute + sticky (PAS fixed : un fixed inset-0 déborde sous la barre
@@ -69,22 +74,21 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
       </nav>
     </header>
 
-    <main class="flex-1">
+    <main id="content" tabindex="-1" class="flex-1 outline-none">
       <slot />
     </main>
 
-    <!-- Ombre vers le haut : détache le footer du fond de carte -->
-    <footer class="relative mt-16 bg-paper/80 shadow-[0_-4px_12px_rgba(30,47,77,0.1)] sm:mt-24">
-      <!-- Bordure haute en trois morceaux : deux segments + arc qui épouse le
-           médaillon sans l'entourer. -->
-      {
-        ["left-0", "right-0"].map((side) => (
-          <span
-            aria-hidden="true"
-            class={`wave-line absolute top-[-10px] h-5 w-[calc(50%-38px)] ${side}`}
-          />
-        ))
-      }
+    <!-- isolate : le fond découpé (-z-10) reste derrière le contenu du
+         footer sans passer sous le fond de carte de la page. -->
+    <footer class="relative isolate mt-16 sm:mt-24">
+      <!-- Fond papier découpé LE LONG de l'onde (masque, voir .footer-sheet
+           dans global.css) + ombre vers le haut qui épouse la courbe :
+           détache le footer du fond de carte. -->
+      <div aria-hidden="true" class="footer-sheet absolute inset-x-0 bottom-0 top-[-46px] -z-10" />
+      <!-- Bordure haute : une onde pleine largeur, interrompue au centre
+           (masque) pour l'arc qui épouse le médaillon sans l'entourer. Un
+           seul motif = même phase que le masque du fond. -->
+      <span aria-hidden="true" class="footer-wave wave-line absolute inset-x-0 top-[-10px] h-5" />
       <svg
         aria-hidden="true"
         viewBox="0 0 76 38"
@@ -112,12 +116,13 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
         >Tours</span
       >
       <!-- Picto en médaillon sous l'arc : rappel du header, format sceau.
+           Sans fond propre : le disque vient du fond découpé du footer.
            Lien vers l'accueil (sur l'accueil : simple remontée douce). -->
       <a
         href="/"
         id="footer-top"
         aria-label="Retour à l'accueil"
-        class="footer-seal logo-live absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-paper p-1.5 leading-none"
+        class="footer-seal logo-live absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full p-1.5 leading-none"
       >
         <LogoMark class="h-14 w-14" />
       </a>
@@ -138,6 +143,13 @@ const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date
 
       initSmoothScroll();
       initStatCounters();
+
+      // Lien d'évitement : Lenis intercepte les ancres (défilement sans
+      // déplacer le focus) → focus posé à la main sur <main>, pour que la
+      // tabulation suivante reparte bien du contenu.
+      document.querySelector(".skip-link")?.addEventListener("click", () => {
+        document.getElementById("content")?.focus({ preventScroll: true });
+      });
 
       // Médaillon du footer : lien vers l'accueil. Déjà sur l'accueil :
       // remontée douce plutôt qu'un rechargement de page.

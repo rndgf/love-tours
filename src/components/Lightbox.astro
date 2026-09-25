@@ -84,6 +84,9 @@
     counter.textContent = day
       ? `Jour ${day} · ${sub.indexOf(link) + 1} / ${sub.length}`
       : `${index + 1} / ${group.length}`;
+    img.alt = day
+      ? `Photo ${sub.indexOf(link) + 1} sur ${sub.length} du jour ${day}`
+      : `Photo ${index + 1} sur ${group.length}`;
     // Préchargement des voisines pour une navigation fluide.
     for (const j of [index + 1, index - 1]) {
       const n = group[(j + group.length) % group.length];

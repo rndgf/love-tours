@@ -280,7 +280,27 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 ## 6. Accessibilité et dégradations
 
 - `prefers-reduced-motion: reduce` neutralise : Lenis, compteurs, voyageurs
-  (placement direct), cœur battant, roue, sentier.
+  (placement direct), cœur battant, roue, sentier, **et toute animation ou
+  transition CSS** (règle globale `*` à 0,01 ms dans `global.css`, délais à
+  0 s). Les défilements programmatiques (`scrollToTop`, `scrollToEl`,
+  recentrage de la nav des années) passent en saut instantané
+  (`behavior: "auto"`), ainsi que `scroll-behavior` mobile.
+- **Clavier** : premier arrêt Tab = lien d'évitement « Aller au contenu »
+  (`.skip-link`, hors écran jusqu'au focus) vers `<main id="content"
+  tabindex="-1">`. Le focus est posé en JS sur `<main>` au clic, car Lenis
+  intercepte les ancres sans déplacer le focus. Contour de focus unique sur
+  tout le site : `:focus-visible` laiton 2 px, décalé de 3 px, en
+  `@layer base` (aucun contour au clic souris).
+- **Photos** : les vignettes de galerie ont `alt=""` (image décorative) et
+  le lien porte le nom, `aria-label="Agrandir la photo N sur T du jour J"`
+  (sans lui, un lecteur d'écran annonce l'URL du fichier). L'image de la
+  lightbox reçoit un `alt` mis à jour à chaque photo (« Photo N sur T du
+  jour J »).
+- **Carte** : état d'attente « Chargement de la carte… » (`.map-loading`,
+  `role="status"`, fond `paper-deep`) jusqu'au `load` MapLibre ; retiré aussi
+  à l'apparition du message d'erreur.
+- **Contraste** : tout texte atteint le seuil WCAG AA (4,5:1) sur `paper` et
+  `paper-deep` ; `ink-soft` a été foncé en `#716857` pour cela.
 - Sans JavaScript : contenu et valeurs complets (rendu serveur), ancres
   fonctionnelles, seuls les enrichissements (zoom carte, compteurs,
   voyageurs, lightbox) disparaissent.

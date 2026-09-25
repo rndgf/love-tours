@@ -27,7 +27,7 @@ sur papier. Tout élément nouveau doit répondre
 | `--color-paper` | `#faf6ee` | fond général, pastilles, texte sur accent |
 | `--color-paper-deep` | `#f0e9d8` | fonds enfoncés (badge « estimé », bouton actif) |
 | `--color-ink` | `#23201a` | texte courant |
-| `--color-ink-soft` | `#7a7160` | texte secondaire (descriptions, dates) |
+| `--color-ink-soft` | `#716857` | texte secondaire (descriptions, dates) ; valeur minimale pour 4,5:1 (WCAG AA) sur `paper-deep`, ne pas éclaircir |
 | `--color-navy` | `#1e2f4d` | **structure** : bordures, filets, labels, pictos, filigranes |
 | `--color-carmin` | `#b3402f` | **mode vélo** (données : traces, stats, voyageur) |
 | `--color-sapin` | `#3e6b4f` | **mode à pied** |
@@ -136,8 +136,17 @@ Codes typographiques :
    irrégulière** (pas de motif régulier — exigence explicite), path
    `M0,10 C40,2 70,16 110,9 C150,3 185,18 230,12 C275,6 300,3 350,11
    C395,18 430,4 480,7 C525,10 565,15 600,10` sur 600×20, même dasharray,
-   opacité 50 %, en deux segments + arc `M2 36.5 A36 36 0 0 1 74 36.5`
-   (76×38) qui épouse le médaillon sans l'entourer. Le motif vit dans la
+   opacité 50 %, en une seule onde pleine largeur masquée sur 76 px au
+   centre (`.footer-wave`, même phase que le fond) + arc
+   `M2 36.5 A36 36 0 0 1 74 36.5` (76×38) qui épouse le médaillon sans
+   l'entourer. **Le fond papier 80 % du footer épouse l'onde** : boîte
+   `.footer-sheet` (46 px au-dessus du footer, place du disque) dont le `::before` est
+   découpé sous la courbe (même masque en deux couches que la nav des
+   années, bande remplie sous la courbe) + un disque de rayon 36 px (celui
+   de l'arc) sous le médaillon, qui n'a donc aucun fond propre : même
+   teinte que le footer, pointillés posés sur le bord du disque sans
+   marge ; l'ombre vers le haut est un
+   `drop-shadow` sur la boîte, jamais un `box-shadow` rectangulaire. Le motif vit dans la
    classe `.wave-line` (global.css), partagée avec la bordure basse de la
    nav mobile des années quand elle est collée en haut (fondu 0,25 s,
    bordure rectiligne rendue transparente).
@@ -193,6 +202,12 @@ défile, voyageur qui avance, compteurs de bord) — jamais de décoratif
 gratuit. **Budget perf explicite** : aucune animation permanente sans plage
 morte ; boucles rAF bornées ou auto-arrêtées ; `prefers-reduced-motion`
 neutralise tout (cf. AGENT-SITE.md §6).
+
+Signes d'interface complémentaires (pas du mouvement, même souci du fini) :
+contour de focus clavier laiton 2 px décalé de 3 px ; lien d'évitement
+marine sur texte papier, mono 12 px capitales ; barre de défilement de la
+page `scrollbar-color` marine 40 % sur papier ; `<meta name="theme-color">`
+papier `#faf6ee` pour la barre du navigateur mobile.
 
 | Animation | Déclencheur | Valeurs exactes |
 |---|---|---|
