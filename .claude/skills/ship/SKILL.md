@@ -19,8 +19,8 @@ pas déployer.
 2. `git add -A`.
 3. Commit avec un message en français, style du projet (voir `git log`) :
    titre = action + objet, corps en puces factuelles si plusieurs sujets.
-   Terminer le message par :
-   `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`
+   Terminer le message par les lignes d'attribution que Claude Code fournit
+   dans la session (aucun nom de modèle figé ici).
 4. `git push`.
 5. `npm run deploy` (build + wrangler pages deploy).
 6. Vérification rapide en prod : `curl -s https://love-tours.fr/` doit répondre
