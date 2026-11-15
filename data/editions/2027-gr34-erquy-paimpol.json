@@ -1,0 +1,19 @@
+{
+  "title": "GR34, d'Erquy à Paimpol",
+  "mode": "à pied",
+  "flag": "bzh",
+  "country": "Bretagne",
+  "description": "Six jours de marche sur le GR34, là où nous l'avions laissé en 2025 : d'Erquy à Paimpol, par la baie de Saint-Brieuc et les falaises du Goëlo.",
+  "tzOffsetHours": 2,
+  "planned": true,
+  "startDate": "2027-08-01",
+  "endDate": "2027-08-06",
+  "dayTitles": {
+    "1": "D'Erquy à Pléneuf-Val-André",
+    "2": "De Pléneuf-Val-André à Hillion",
+    "3": "De Hillion à Saint-Laurent-de-la-Mer",
+    "4": "De Saint-Laurent-de-la-Mer à Binic-Étables-sur-Mer",
+    "5": "De Binic-Étables-sur-Mer à Plouha",
+    "6": "De Plouha à Paimpol"
+  }
+}
