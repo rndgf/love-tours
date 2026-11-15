@@ -13,15 +13,17 @@ import { ICONS } from "../lib/icons.js";
 import { coverFor } from "../lib/photos.js";
 
 // Relevés cumulés ; les km sont distingués par mode (vélo / à pied).
+// L'édition à venir (planned) n'y compte pas : rien n'est encore parcouru.
+const done = tours.filter((t) => !t.planned);
 const sum = (list, f) => Math.round(list.reduce((s, t) => s + f(t), 0));
 const globalStats = [
-  { value: tours.length, label: "voyages" },
-  { value: sum(tours.filter((t) => isBike(t.mode)), (t) => t.totals.distanceKm), unit: "km", label: "à vélo" },
-  { value: sum(tours.filter((t) => !isBike(t.mode)), (t) => t.totals.distanceKm), unit: "km", label: "à pied" },
-  { value: sum(tours, (t) => t.totals.days), label: "jours dehors", hideMobile: true },
-  { value: sum(tours, (t) => t.totals.gainM), unit: "m", label: "de dénivelé +" },
+  { value: done.length, label: "voyages" },
+  { value: sum(done.filter((t) => isBike(t.mode)), (t) => t.totals.distanceKm), unit: "km", label: "à vélo" },
+  { value: sum(done.filter((t) => !isBike(t.mode)), (t) => t.totals.distanceKm), unit: "km", label: "à pied" },
+  { value: sum(done, (t) => t.totals.days), label: "jours dehors", hideMobile: true },
+  { value: sum(done, (t) => t.totals.gainM), unit: "m", label: "de dénivelé +" },
 ];
-const firstYear = Math.min(...tours.map((t) => t.year));
+const firstYear = Math.min(...done.map((t) => t.year));
 
 // Stats d'une carte d'édition (3 cellules : distance / dénivelé / effort).
 const cardStats = (tour) => {
@@ -151,7 +153,7 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
               />
               <a
                 href={`/tours/${tour.slug}/`}
-                class={`group relative grid gap-5 overflow-hidden border border-navy/40 bg-white/75 p-4 shadow-md shadow-navy/10 transition hover:border-navy sm:gap-6 sm:p-7 sm:shadow-none sm:hover:shadow-lg sm:hover:shadow-navy/5 ${cover ? "sm:grid-cols-[210px_1fr_210px]" : "sm:grid-cols-[230px_1fr]"}`}
+                class={`group relative grid gap-5 overflow-hidden border p-4 transition hover:border-navy sm:gap-6 sm:p-7 ${tour.planned ? "border-dashed border-navy/50 bg-white/40" : "border-navy/40 bg-white/75 shadow-md shadow-navy/10 sm:shadow-none sm:hover:shadow-lg sm:hover:shadow-navy/5"} ${cover ? "sm:grid-cols-[210px_1fr_210px]" : "sm:grid-cols-[230px_1fr]"}`}
               >
                 {cover && (
                   <div class="relative -mx-4 -mt-4 sm:hidden">
@@ -170,10 +172,12 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
                 <MiniMap
                   slug={tour.slug}
                   mode={tour.mode}
+                  planned={tour.planned}
                   class="relative mx-auto hidden w-44 self-center sm:block sm:w-full"
                 />
                 <div class="relative flex flex-col justify-center">
                   <p class="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-navy">
+                    {tour.planned && <><span class="text-framboise">prochain voyage</span> · </>}
                     {tour.mode}
                     {tour.country && ` · ${tour.country}`}
                   </p>
@@ -181,7 +185,7 @@ const TILTS = [-1.5, 1.2, -0.9, 1.6, -1.2];
                     <Flag flag={tour.flag} /> {tour.title}
                   </h2>
                   <p class="mt-1 text-sm italic text-ink-soft">
-                    {formatRange(tour.startDate, tour.endDate)}
+                    {tour.planned && "prévu "}{formatRange(tour.startDate, tour.endDate)}
                   </p>
                   {tour.description && (
                     <p class="mt-4 max-w-2xl text-ink-soft">

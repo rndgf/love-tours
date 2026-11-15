@@ -6,6 +6,7 @@
  "flag": "🇳🇱",
  "country": "Pays-Bas",
  "description": "Six jours à vélo entre les polders et les digues de la Zélande : 260 km au ras de l'eau, d'île en île, de Vlissingen aux plages de la mer du Nord.",
+ "planned": false,
  "startDate": "2026-08-17",
  "endDate": "2026-08-22",
  "bbox": [

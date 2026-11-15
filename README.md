@@ -68,6 +68,23 @@ cache dans `data/geocode.json` et corrections dans `data/geocode-overrides.json`
 corriger un nom renvoyé par Nominatim ; les overrides inutilisés sont signalés
 en fin d'exécution).
 
+## Annoncer le prochain voyage (édition planifiée)
+
+Le prochain Love Tour s'affiche avant le départ, avec les tracés déjà prêts
+(exports komoot planifiés) et sans photo :
+
+1. Créer `editions/<ANNÉE>_<Nom>/` et y déposer un GPX par jour tracé, nommé
+   avec sa date en préfixe : `2027-07-12_jour-1_….gpx`. Un GPX sans date fait
+   échouer l'import.
+2. `edition.json` : `"planned": true`, plus `startDate`/`endDate` (ISO) pour
+   afficher les dates complètes même si tous les jours ne sont pas tracés.
+3. `npm run tours:all`.
+
+Effort et durée de chaque jour sont estimés d'après l'allure des voyages
+passés du même mode. Après le voyage : retirer `planned`, `startDate` et
+`endDate`, remplacer les GPX par les enregistrements, ajouter les photos,
+relancer `npm run tours:all`.
+
 ## Ce que produit l'import
 
 | Sortie | Contenu |
@@ -146,6 +163,11 @@ Après un `npm install` ou une modification de `package.json`/`astro.config.mjs`
 le redémarrage à chaud du serveur de dev perd le module sharp : toutes les images
 `/_image` répondent 500 (« MissingSharp »). Le build de production n'est pas
 affecté. Correctif : arrêter et relancer `npm run dev`.
+
+Variante vécue : carte bloquée sur « Chargement de la carte… », console
+`Failed to fetch dynamically imported module …/.vite/deps/maplibre-gl.js`
+(réponse 504, cache Vite périmé après relance du serveur). Correctif : arrêter
+le serveur, supprimer `node_modules/.vite`, relancer `npm run dev`.
 
 ## Ordre des photos
 

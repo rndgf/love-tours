@@ -363,8 +363,13 @@ async function importEdition(dirName) {
     // On efface les horodatages ; les temps seront extrapolés des jours enregistrés.
     .map((t) => {
       const norm = (x) => x.toLowerCase().replace(/[^a-z0-9]+/g, "");
+      // Édition à venir (edition.json → planned: true) : tous les GPX sont des
+      // tracés planifiés, datés par le préfixe AAAA-MM-JJ du nom de fichier.
+      const fileDate = t.file.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
       const def = (meta.plannedDays ?? []).find((d) =>
-        norm(t.file).includes(norm(d.match)) || norm(t.name).includes(norm(d.match)));
+        norm(t.file).includes(norm(d.match)) || norm(t.name).includes(norm(d.match)))
+        ?? (meta.planned && fileDate ? { date: fileDate } : null);
+      if (!def && meta.planned) throw new Error(`${dirName} : édition planifiée, GPX sans date (préfixe AAAA-MM-JJ ou plannedDays) : ${t.file}`);
       if (!def) return t;
       console.warn(`    tracé planifié, temps extrapolés (date ${def.date}) : ${t.file}`);
       return { ...t, planned: def, points: t.points.map((p) => ({ ...p, t: null })) };
@@ -433,7 +438,15 @@ async function importEdition(dirName) {
 
   // Extrapolation des jours planifiés à partir de l'allure des jours enregistrés :
   // vitesse en mouvement, part du temps en mouvement, heure de départ moyenne.
-  const recorded = days.filter((d) => !d.planned && d.stats.startTime != null);
+  // Édition entièrement planifiée : allure tirée des éditions déjà importées du
+  // même mode (jours enregistrés seulement).
+  const ownRecorded = days.filter((d) => !d.planned && d.stats.startTime != null);
+  const recorded = ownRecorded.length || !fs.existsSync(DATA_DIR) ? ownRecorded : fs.readdirSync(DATA_DIR)
+    .filter((f) => f.endsWith(".json"))
+    .map((f) => JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), "utf8")))
+    .filter((t) => t.mode === mode && !t.planned)
+    .flatMap((t) => t.days.filter((d) => !d.estimated && !d.noTrace && d.movingS > 0))
+    .map((d) => ({ stats: d }));
   for (const d of days.filter((x) => x.planned)) {
     // Raccordement : la trace planifiée doit partir d'un point connu (ex. le
     // parking où finit un autre jour). Connecteur en ligne droite + stats recalculées.
@@ -627,8 +640,10 @@ async function importEdition(dirName) {
     flag: meta.flag ?? "",
     country: meta.country ?? "",
     description: meta.description ?? "",
-    startDate: days[0].stats.startTime?.slice(0, 10) ?? null,
-    endDate: days.at(-1).stats.endTime?.slice(0, 10) ?? null,
+    // Édition à venir : les dates d'edition.json priment (tracés encore incomplets).
+    planned: meta.planned ?? false,
+    startDate: meta.startDate ?? days[0].stats.startTime?.slice(0, 10) ?? null,
+    endDate: meta.endDate ?? days.at(-1).stats.endTime?.slice(0, 10) ?? null,
     bbox,
     cover: meta.cover ?? "",
     totals: { ...totals, photos: [...photoCounts.entries()].filter(([k]) => k > 0).reduce((s, [, v]) => s + v, 0) },

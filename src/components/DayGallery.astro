@@ -24,7 +24,41 @@ const lb = `${slug}-day-${day}`;
 // Nom accessible des vignettes : l'image est décorative (alt=""), le lien
 // porte le sens (sinon un lecteur d'écran annonce l'URL du fichier).
 const label = (n: number) => `Agrandir la photo ${n} sur ${items.length} du jour ${day}`;
+
+// Gabarits des cadres vides (grille 4 colonnes, 2 en mobile), choisis par
+// n° de jour pour varier la page. Le 1er cadre porte « photos à venir ».
+const BIG = "col-span-2 row-span-2";
+const M = "hidden sm:block"; // cadre masqué en mobile (3 cadres max)
+const SKELETONS = [
+  [BIG, "", "", M, M], // grand à gauche
+  ["", "", M, M], // une rangée de petits
+  [`${BIG} sm:col-start-3`, "", "", M, M], // grand à droite
+  [BIG, `${BIG} ${M}`], // deux grands
+  [`${BIG} sm:col-start-2`, "", "", M, M], // grand au centre
+];
+const skeleton = SKELETONS[(day - 1) % SKELETONS.length];
 ---
+
+<!-- Journée sans photo (édition à venir) : cadres vides statiques (rien ne
+     charge : pas de pulsation), disposition variée d'un jour à l'autre. -->
+{items.length === 0 && (
+  <div class="mt-6 grid grid-flow-row-dense grid-cols-2 gap-2 sm:grid-cols-4">
+    {skeleton.map((cls, i) => (
+      <div aria-hidden={i > 0 ? "true" : undefined} class={`border border-dashed border-navy/30 p-1 ${cls}`}>
+        <div class="flex aspect-[4/3] h-full w-full flex-col items-center justify-center gap-2 bg-paper-deep">
+          {i === 0 && (
+            <>
+              <svg viewBox="0 0 24 24" fill="none" class="h-7 w-7 stroke-navy/35" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 8h4l2-2.5h6L17 8h4v11H3z" /><circle cx="12" cy="13" r="3.5" />
+              </svg>
+              <span class="font-mono text-center text-[10px] uppercase tracking-[0.18em] text-navy/70">photos à venir</span>
+            </>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
 
 {items.length > 0 && (
   <div class="mt-6">

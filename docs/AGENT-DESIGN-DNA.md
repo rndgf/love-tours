@@ -158,6 +158,19 @@ Codes typographiques :
 7. **Boutons-instruments** (jours, « + N photos ») : mono uppercase 9-10 px,
    `border border-navy/30 bg-paper`, hover `border-navy`, actif
    `border-navy + bg-paper-deep`, cible tactile `min-h-[30px]` en mobile.
+8. **Édition à venir** (`planned`) : le tiret dit « pas encore parcouru ».
+   Carte HP et articles du journal en `border-dashed border-navy/50
+   bg-white/40`, sans ombre ni photo ; kicker préfixé
+   « prochain voyage · » en `framboise` (pas de badge encadré : il
+   chevauchait le titre) ; dates précédées de
+   « prévu ». Tracés en tirets : minimap `dasharray 2.4 1.8`, carte
+   MapLibre `line-dasharray [2, 1.5]` (distincts des transferts en points).
+   Journée sans photo : cadres vides au gabarit de la galerie (bord
+   `border-dashed border-navy/30 p-1`, fond `paper-deep`, 4/3), statiques,
+   sans pulsation. Cinq dispositions tournantes selon le n° de jour : grand
+   à gauche, rangée de petits, grand à droite, deux grands, grand au centre.
+   Le premier cadre porte un picto appareil photo et « photos à venir ».
+   Mobile : 3 cadres au plus.
 
 ## 6. Iconographie
 

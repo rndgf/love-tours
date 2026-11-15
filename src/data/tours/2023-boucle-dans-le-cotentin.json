@@ -6,6 +6,7 @@
  "flag": "🇫🇷",
  "country": "Normandie",
  "description": "Notre première randonnée pédestre, une boucle de quatre jours de marche dans le Cotentin au départ de Cherbourg : la Hague, les caps et le bocage normand.",
+ "planned": false,
  "startDate": "2023-07-10",
  "endDate": "2023-07-13",
  "bbox": [

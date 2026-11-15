@@ -14,8 +14,10 @@ interface Props {
   slug: string;
   bbox: [number, number, number, number];
   days: { n: number; name: string }[];
+  /** Édition à venir : tracés en tirets (pas encore parcourus). */
+  planned?: boolean;
 }
-const { slug, bbox, days } = Astro.props;
+const { slug, bbox, days, planned = false } = Astro.props;
 ---
 
 <div
@@ -23,6 +25,7 @@ const { slug, bbox, days } = Astro.props;
   data-slug={slug}
   data-bbox={JSON.stringify(bbox)}
   data-days={JSON.stringify(days.map((d) => d.n))}
+  data-planned={planned ? "" : undefined}
 >
   <!-- État d'attente : visible jusqu'au premier rendu complet de la carte
        (retiré au load), plutôt qu'un cadre vide pendant le téléchargement
@@ -80,6 +83,7 @@ const { slug, bbox, days } = Astro.props;
         filter: ["!", ["has", "transfer"]],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
+          ...(el.dataset.planned != null && { "line-dasharray": [2, 1.5] }),
           "line-width": 3,
           "line-color": [
             "match",

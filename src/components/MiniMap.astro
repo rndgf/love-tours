@@ -12,8 +12,10 @@ interface Props {
   class?: string;
   /** Mode de l'édition : la trace est carmin à vélo, vert sapin à pied. */
   mode: string;
+  /** Édition à venir : tracé en pointillé (pas encore parcouru). */
+  planned?: boolean;
 }
-const { slug, label = "", class: className = "", mode } = Astro.props;
+const { slug, label = "", class: className = "", mode, planned = false } = Astro.props;
 // Pas de mode par défaut : un mode absent ou inconnu fait échouer le build.
 const accent = accentVar(mode);
 
@@ -46,7 +48,8 @@ const m = maps[`../data/minimaps/${slug}.json`]?.default;
       ))}
       {m.trace.map((d) => (
         <path d={d} fill="none" stroke={accent} stroke-width="1.4"
-          stroke-linecap="round" stroke-linejoin="round" />
+          stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray={planned ? "2.4 1.8" : undefined} />
       ))}
       {m.loop ? (
         <>

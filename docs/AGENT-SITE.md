@@ -70,6 +70,7 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
     Gwenn ha Du ; tous les drapeaux sont rendus en SVG Twemoji locaux par
     `src/components/Flag.astro`, repli texte si absent du set ; le
     `<title>` d'onglet n'utilise pas le drapeau), `country`, `description`,
+    `planned` (booléen : édition à venir, voir §4.4),
     `startDate`/`endDate` (ISO), `cover` (fragment de nom de fichier photo),
     `transferModes` (ex. `["ferry"]`), `bbox` `[W,S,E,N]`, `totals`
     (`distanceKm`, `days`, `gainM`, `movingS`), `days[]`.
@@ -86,7 +87,8 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 - `src/assets/tours/<slug>/day-N/NNN_*.jpg` — photos triées/ordonnées par jour
   (préfixe `001_` = ordre chronologique).
 - Éditions réelles : 2021 Loire (vélo), 2023 Cotentin (vélo), 2024 South
-  England (à pied), 2025 GR34 Dinard-Erquy (à pied), 2026 Zeeland (vélo).
+  England (à pied), 2025 GR34 Dinard-Erquy (à pied), 2026 Zeeland (vélo) ;
+  à venir : 2027 GR34 Erquy-Paimpol (à pied, `planned`).
   Tri d'affichage : de la plus récente à la plus ancienne (`src/lib/tours.js`).
 
 ### Formatages obligatoires (`src/lib/tours.js`)
@@ -157,6 +159,21 @@ qu'une reconstruction peut réutiliser sans toucher aux scripts :
 5. **Navigation bas de page** : flèches ← → centrées vers éditions
    précédente/suivante (grisées si absentes). Bouton flottant « ↑ » après
    600 px de scroll.
+
+### 4.4 Édition à venir (`planned: true`)
+
+- Le prochain Love Tour s'affiche dès que des tracés de jours existent
+  (`edition.json` → `"planned": true`, procédure dans le README).
+- Traitement visuel distinct (détail : AGENT-DESIGN-DNA.md §5.8) : bordures
+  en tirets, tracés en tirets, kicker « prochain voyage · à pied · Bretagne », dates « prévu du… ».
+  Aucune photo : chaque journée montre des cadres vides « photos à venir »
+  (`DayGallery.astro`, gabarit varié selon le n° de jour).
+- Stats : distance et D+ des jours tracés ; effort et durée estimés d'après
+  l'allure des voyages passés du même mode (badge « prévu » sur chaque jour).
+  Cartouche détail : « jours tracés » au lieu de « jours ».
+- Exclue des relevés cumulés de la homepage (voyages, km, jours, D+) et de
+  la plage d'années du header et du footer (`2021–2026`).
+- En tête de timeline (tri par année), sous la flèche du fil.
 
 ### 4.2 bis Pages annexes
 

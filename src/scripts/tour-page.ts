@@ -40,6 +40,8 @@ export function initTourPage(): void {
       cells[i].querySelector("dt")!.textContent = label;
       if (animate) countUp(dd);
     });
+  // Libellés des totaux tels que rendus par le serveur (« jours tracés » si à venir).
+  const totalLabels = cells.map((c) => c.querySelector("dt")!.textContent!.trim());
   const animateStats = () => cells.forEach((c) => countUp(c.querySelector("dd")!));
 
   const dayRows = (d: DayStats): StatRow[] => [
@@ -50,7 +52,7 @@ export function initTourPage(): void {
   ];
   const totalRows = (t: Totals): StatRow[] => [
     [t.distanceKm, "km"],
-    [t.days, "jours"],
+    [t.days, totalLabels[1]],
     [t.gainM, "m dénivelé +"],
     [formatHours(t.movingS), "effort"],
   ];

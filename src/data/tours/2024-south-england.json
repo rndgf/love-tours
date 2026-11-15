@@ -6,6 +6,7 @@
  "flag": "🇬🇧",
  "country": "Angleterre",
  "description": "Sept jours à vélo de Caen à Dieppe par le sud de l'Angleterre : traversée en ferry, Portsmouth, Winchester, les South Downs puis Brighton avant le retour par Newhaven.",
+ "planned": false,
  "startDate": "2024-07-22",
  "endDate": "2024-07-28",
  "bbox": [

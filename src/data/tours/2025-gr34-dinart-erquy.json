@@ -6,6 +6,7 @@
  "flag": "bzh",
  "country": "Bretagne",
  "description": "Cinq jours de marche sur le GR34, le fameux sentier des douaniers, de Dinard à Erquy : falaises roses, caps et plages de la Côte d'Émeraude.",
+ "planned": false,
  "startDate": "2025-08-11",
  "endDate": "2025-08-16",
  "bbox": [

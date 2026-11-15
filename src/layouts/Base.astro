@@ -15,7 +15,8 @@ interface Props {
 }
 const { title, description = "Nos étés à deux, à vélo ou à pied, depuis 2021." } = Astro.props;
 const firstYear = tours.length ? Math.min(...tours.map((t) => t.year)) : new Date().getFullYear();
-const lastYear = tours.length ? Math.max(...tours.map((t) => t.year)) : new Date().getFullYear();
+// Édition à venir exclue : « nos étés » = ceux déjà vécus.
+const lastYear = tours.some((t) => !t.planned) ? Math.max(...tours.filter((t) => !t.planned).map((t) => t.year)) : new Date().getFullYear();
 
 ---
 

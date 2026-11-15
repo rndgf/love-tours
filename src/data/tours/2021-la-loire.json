@@ -6,6 +6,7 @@
  "flag": "🇫🇷",
  "country": "France",
  "description": "Notre premier Love Tour, cadeau de Mélanie pour fêter les 40 ans de Renaud : quatre jours à vélo le long de la Loire, au fil des châteaux et des bords de fleuve.",
+ "planned": false,
  "startDate": "2021-08-05",
  "endDate": "2021-08-10",
  "bbox": [
